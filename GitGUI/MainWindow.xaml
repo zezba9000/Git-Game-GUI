@@ -1,0 +1,25 @@
+﻿<Window x:Class="GitGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GitGUI"
+        mc:Ignorable="d"
+        Title="GitIn" Height="350" Width="525">
+	<Grid>
+		<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="432,289,0,0" VerticalAlignment="Top" Width="75" Click="cloneButton_Click"/>
+		<Button x:Name="getChangedButton" Content="Get Changes" HorizontalAlignment="Left" Margin="10,289,0,0" VerticalAlignment="Top" Width="75" Click="getChangedButton_Click"/>
+
+		<TabControl x:Name="tabControl" HorizontalAlignment="Left" Height="274" Margin="10,10,0,0" VerticalAlignment="Top" Width="497">
+			<TabItem Header="Changes">
+				<Grid Background="#FFE5E5E5">
+					<ListBox x:Name="changesListBox" HorizontalAlignment="Left" Height="226" Margin="10,10,0,0" VerticalAlignment="Top" Width="219" SelectionChanged="changesListBox_SelectionChanged"/>
+					<TextBlock x:Name="diffTextBlock" HorizontalAlignment="Left" Margin="234,10,0,0" TextWrapping="NoWrap" Text="TextBlock" VerticalAlignment="Top" Height="226" Width="247"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="History">
+				<Grid Background="#FFE5E5E5"/>
+			</TabItem>
+		</TabControl>
+	</Grid>
+</Window>
