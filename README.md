@@ -4,7 +4,7 @@
 
 - NOTE: This is just in the prototype faze.
 
-- Based on libgit2sharp and writen in C#
+- Based on libgit2sharp and writen in C# / WPF (maybe CEF in the future)
 
 - Auto check for .gitignore file
 
