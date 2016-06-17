@@ -1,0 +1,37 @@
+﻿<UserControl x:Class="GitGUI.ChangesUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GitGUI"
+			 xmlns:self="clr-namespace:GitGUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="500">
+
+	<UserControl.Resources>
+		<self:FileItem x:Key="FileItem"/>
+		<DataTemplate x:Key="ListViewTemplate">
+			<StackPanel Orientation="Horizontal">
+				<Image Source="{Binding Path=Icon}" Width="16" Height="16" MouseDown="fileItemImage_MouseDown"/>
+				<TextBlock Text="{Binding Path=Filename}" VerticalAlignment="Center"/>
+			</StackPanel>
+		</DataTemplate>
+	</UserControl.Resources>
+
+	<Grid>
+		<Button x:Name="refreshChangedButton" Content="Refresh" HorizontalAlignment="Left" Margin="234,241,0,0" VerticalAlignment="Top" Width="75" Click="refreshChangedButton_Click"/>
+		<Button x:Name="commitStagedButton" Content="Commit" HorizontalAlignment="Left" Margin="326,241,0,0" VerticalAlignment="Top" Width="75" Click="commitStagedButton_Click"/>
+		<Button x:Name="pushChangesButton" Content="Push" HorizontalAlignment="Left" Margin="406,241,0,0" VerticalAlignment="Top" Width="75" Click="pushChangesButton_Click"/>
+		<Button x:Name="pullChangesButton" Content="Pull" HorizontalAlignment="Left" Margin="406,266,0,0" VerticalAlignment="Top" Width="75" Click="pullChangesButton_Click"/>
+		<Button x:Name="stageAllButton" Content="Stage All" HorizontalAlignment="Left" Margin="234,10,0,0" VerticalAlignment="Top" Width="75" Click="stageAllButton_Click"/>
+		<Button x:Name="unstageAllButton" Content="Unstage All" HorizontalAlignment="Left" Margin="234,129,0,0" VerticalAlignment="Top" Width="75" Click="unstageAllButton_Click"/>
+		<Button x:Name="resolveSelectedButton" Content="Resolve Sel" HorizontalAlignment="Left" Margin="10,241,0,0" VerticalAlignment="Top" Width="75" Click="resolveSelectedButton_Click"/>
+		<Button x:Name="resolveAllButton" Content="Resolve All" HorizontalAlignment="Left" Margin="90,241,0,0" VerticalAlignment="Top" Width="75" Click="resolveAllButton_Click"/>
+		<TextBlock x:Name="diffTextBlock" HorizontalAlignment="Left" Margin="326,10,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Height="226" Width="155"/>
+		<TextBox x:Name="commitMessageTextBox" Height="23" TextWrapping="Wrap" Text="Commit message..." Margin="10,266,99,10"/>
+		<StackPanel MouseDown="StackPanel_MouseDown">
+			<ListView Name="changesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" HorizontalAlignment="Left" Height="107" Margin="10,10,0,0" VerticalAlignment="Top" Width="219" SelectionChanged="changesListView_SelectionChanged"/>
+			<ListView Name="changesListView2" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" HorizontalAlignment="Left" Height="107" Margin="10,10,0,0" VerticalAlignment="Top" Width="219" SelectionChanged="changesListView2_SelectionChanged"/>
+		</StackPanel>
+	</Grid>
+</UserControl>
