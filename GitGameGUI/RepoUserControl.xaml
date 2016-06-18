@@ -12,7 +12,7 @@
 		<CheckBox x:Name="gitLFSSupportCheckBox" Content="Validate LFS Support" HorizontalAlignment="Left" Margin="10,76,0,0" VerticalAlignment="Top"/>
 		<CheckBox x:Name="gitignoreExistsCheckBox" Content="Validate .gitignore file exists" HorizontalAlignment="Left" Margin="10,96,0,0" VerticalAlignment="Top"/>
 		<CheckBox x:Name="autoCommitMergeCheckBox" Content="Auto Commit Successful Merge" HorizontalAlignment="Left" Margin="10,116,0,0" VerticalAlignment="Top"/>
-		<CheckBox x:Name="autoPushMergeCheckBox" Content="Auto Push Successful Merge" HorizontalAlignment="Left" Margin="10,136,0,0" VerticalAlignment="Top"/>
+		<CheckBox x:Name="autoPushRemoteMergeCheckBox" Content="Auto Push Successful Remote Merge" HorizontalAlignment="Left" Margin="10,136,0,0" VerticalAlignment="Top"/>
 		<ComboBox x:Name="activeRepoComboBox" HorizontalAlignment="Left" Margin="361,41,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
 		<Label x:Name="label" Content="Active Repository" HorizontalAlignment="Left" Margin="361,10,0,0" VerticalAlignment="Top"/>
 		<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Left" Margin="361,68,0,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>

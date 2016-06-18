@@ -94,7 +94,7 @@ namespace GitGUI
 					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.validateLFS;
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
 					singleton.autoCommitMergeCheckBox.IsChecked = repoSettings.autoCommit;
-					singleton.autoPushMergeCheckBox.IsChecked = repoSettings.autoPush;
+					singleton.autoPushRemoteMergeCheckBox.IsChecked = repoSettings.autoPush;
 					singleton.nameTextBox.Text = repoSettings.signatureName;
 					singleton.emailTextBox.Text = repoSettings.signatureEmail;
 

@@ -30,7 +30,7 @@ namespace GitGUI
 
 		public FileItem()
 		{
-			
+			filename = "ERROR";
 		}
 
 		public FileItem(string iconFilename, string filename)
@@ -51,10 +51,10 @@ namespace GitGUI
 		private void UpdateUI()
 		{
 			// clear ui
-			diffTextBlock.Text = "";
+			diffTextBox.Text = "";
 			bool changesFound = false;
-			changesListView.Items.Clear();
-			changesListView2.Items.Clear();
+			unstagedChangesListView.Items.Clear();
+			stagedChangesListView.Items.Clear();
 
 			// check if repo exists
 			if (RepoUserControl.repo == null) return;
@@ -64,28 +64,34 @@ namespace GitGUI
 			foreach (var fileStatus in repoStatus)
 			{
 				changesFound = true;
-				Console.WriteLine("STATUS: " + fileStatus.State);
-
-				if ((fileStatus.State & FileStatus.ModifiedInWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.ModifiedInIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.NewInWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.NewInIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.DeletedFromWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.DeletedFromIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.RenamedInWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.RenamedInIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.TypeChangeInWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.TypeChangeInIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.Conflicted) != 0) changesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.Ignored) != 0) {/*do nothing...*/}
-				else if ((fileStatus.State & FileStatus.Unreadable) != 0)
+				bool stateHandled = false;
+				var state = fileStatus.State;
+				if ((state & FileStatus.ModifiedInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.ModifiedInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.NewInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.NewInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.DeletedFromWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.DeletedFromIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.RenamedInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.RenamedInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.TypeChangeInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.TypeChangeInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.Conflicted) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath)); stateHandled = true;}
+				if ((state & FileStatus.Ignored) != 0) {stateHandled = true;}
+				if ((state & FileStatus.Unreadable) != 0)
 				{
+					stateHandled = true;
 					string fullpath = RepoUserControl.repoPath + "\\" + fileStatus.FilePath;
 					if (File.Exists(fullpath))
 					{
 						// disable readonly if this is the cause
 						var attributes = File.GetAttributes(fullpath);
-						if ((attributes & FileAttributes.ReadOnly) != 0) File.SetAttributes(fullpath, attributes & ~FileAttributes.ReadOnly);
+						if ((attributes & FileAttributes.ReadOnly) != 0) File.SetAttributes(fullpath, FileAttributes.Normal);
+						else
+						{
+							MessageBox.Show("Problem will file read (please fix and refresh)\nCause: " + fileStatus.FilePath);
+							continue;
+						}
 
 						// check to make sure file is now readable
 						attributes = File.GetAttributes(fullpath);
@@ -97,13 +103,14 @@ namespace GitGUI
 						MessageBox.Show("Expected file doesn't exist: " + fileStatus.FilePath);
 					}
 				}
-				else
+
+				if (!stateHandled)
 				{
-					MessageBox.Show("Unsuported File State: " + fileStatus.State);
+					MessageBox.Show("Unsuported File State: " + state);
 				}
 			}
 
-			if (!changesFound) Console.WriteLine("No Changes");
+			if (!changesFound) Console.WriteLine("No Changes, now do some stuff!");
 		}
 
 		private void refreshChangedButton_Click(object sender, RoutedEventArgs e)
@@ -111,119 +118,142 @@ namespace GitGUI
 			MainWindow.UpdateUI();
 		}
 
-		private void changesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void RefreshDiffText(ListView listView)
 		{
-			if (MainWindow.uiUpdating) return;
-			
-			if (changesListView.SelectedItem == null)
-			{
-				diffTextBlock.Text = "";
-				return;
-			}
-
-			changesListView2.SelectedItem = null;
-			
 			foreach (var item in RepoUserControl.repo.RetrieveStatus())
 			{
-				if (item.FilePath != ((FileItem)changesListView.SelectedValue).filename) continue;
+				if (item.FilePath != ((FileItem)listView.SelectedValue).filename) continue;
 
-				if (item.State == FileStatus.ModifiedInWorkdir)
+				// check if file still exists
+				if (!File.Exists(RepoUserControl.repoPath + "\\" + item.FilePath))
 				{
-					var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>() { item.FilePath });
-					diffTextBlock.Text = patch.Content;
+					diffTextBox.Text = "<< File Doesn't Exist >>";
+					continue;
 				}
-				else if (item.State == FileStatus.NewInWorkdir)
+
+				// check if binary file
+				var blob = RepoUserControl.repo.ObjectDatabase.CreateBlob(item.FilePath);
+				if (blob.IsBinary)
 				{
-					var blob = RepoUserControl.repo.ObjectDatabase.CreateBlob(item.FilePath);
-					if (!blob.IsBinary) diffTextBlock.Text = blob.GetContentText();
-					else diffTextBlock.Text = "<< Binary File >>";
+					diffTextBox.Text = "<< Binary File >>";
+					continue;
 				}
-				else if (item.State == FileStatus.Conflicted)
+
+				// check for text types
+				var state = item.State;
+				if ((state & FileStatus.ModifiedInWorkdir) != 0)
 				{
-					//var result = repo.Merge(activeBranch, null);
-					//if (result.Status == MergeStatus.Conflicts)
-					{
-						foreach (var conflict in RepoUserControl.repo.Index.Conflicts)
-						{
-							var branch = RepoUserControl.repo.Branches["master"];
-							var tip = branch.Tip;
-							var blob = tip[conflict.Theirs.Path].Target as Blob;
-							string value = blob.GetContentText();
-							//repo.Index.Add(conflict.Ours.Path);// submit resolved file
-						}
-					}
-					
-					var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>() { item.FilePath });
-					diffTextBlock.Text = patch.Content;
+					var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>(){item.FilePath});
+					var match = Regex.Match(patch.Content, @"@@\s-\d*\s\+\d*\s@@\n(.*)", RegexOptions.Singleline);
+					if (match.Success && match.Groups.Count == 2) diffTextBox.Text = match.Groups[1].Value.Replace("\\ No newline at end of file\n", "");
+					else diffTextBox.Text = patch.Content;
+				}
+				else if ((state & FileStatus.ModifiedInIndex) != 0)
+				{
+					diffTextBox.Text = blob.GetContentText();
+				}
+				else if ((state & FileStatus.NewInWorkdir) != 0 || (state & FileStatus.NewInIndex) != 0)
+				{
+					diffTextBox.Text = blob.GetContentText();
+				}
+				else if ((state & FileStatus.DeletedFromWorkdir) != 0 || (state & FileStatus.DeletedFromIndex) != 0)
+				{
+					diffTextBox.Text = blob.GetContentText();
+				}
+				else if ((state & FileStatus.RenamedInWorkdir) != 0 || (state & FileStatus.RenamedInIndex) != 0)
+				{
+					diffTextBox.Text = blob.GetContentText();
+				}
+				else if ((state & FileStatus.TypeChangeInWorkdir) != 0 || (state & FileStatus.TypeChangeInIndex) != 0)
+				{
+					diffTextBox.Text = blob.GetContentText();
+				}
+				else if ((state& FileStatus.Conflicted) != 0)
+				{
+					diffTextBox.Text = blob.GetContentText();
+				}
+				else if ((state & FileStatus.Ignored) != 0)
+				{
+					// do nothing...
+				}
+				else if ((state & FileStatus.Unreadable) != 0)
+				{
+					MessageBox.Show("Something is wrong. The file is not readable!");
+				}
+				else
+				{
+					MessageBox.Show("Unsuported FileStatus: " + state);
 				}
 			}
 		}
 
-		private void changesListView2_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void unstagedChangesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (MainWindow.uiUpdating) return;
 			
-			if (changesListView2.SelectedItem == null)
+			if (unstagedChangesListView.SelectedItem == null)
 			{
-				diffTextBlock.Text = "";
+				diffTextBox.Text = "";
 				return;
 			}
 
-			changesListView.SelectedItem = null;
-			
-			foreach (var item in RepoUserControl.repo.RetrieveStatus())
-			{
-				if (item.FilePath != ((FileItem)changesListView2.SelectedValue).filename) continue;
+			stagedChangesListView.SelectedItem = null;
+			RefreshDiffText(unstagedChangesListView);
+		}
 
-				if (item.State == FileStatus.ModifiedInIndex)
-				{
-					var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>() { item.FilePath });
-					diffTextBlock.Text = patch.Content;
-				}
-				else if (item.State == FileStatus.NewInIndex)
-				{
-					var blob = RepoUserControl.repo.ObjectDatabase.CreateBlob(item.FilePath);
-					if (!blob.IsBinary) diffTextBlock.Text = blob.GetContentText();
-					else diffTextBlock.Text = "<< Binary File >>";
-				}
+		private void stagedChangesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (MainWindow.uiUpdating) return;
+			
+			if (stagedChangesListView.SelectedItem == null)
+			{
+				diffTextBox.Text = "";
+				return;
 			}
+
+			unstagedChangesListView.SelectedItem = null;
+			RefreshDiffText(stagedChangesListView);
 		}
 
 		private void StackPanel_MouseDown(object sender, MouseButtonEventArgs e)
 		{
-			e.Handled = true;
-			changesListView.SelectedItem = null;
-			changesListView2.SelectedItem = null;
-			diffTextBlock.Text = "";
+			unstagedChangesListView.SelectedItem = null;
+			stagedChangesListView.SelectedItem = null;
+			diffTextBox.Text = "";
 		}
 
-		private void fileItemImage_MouseDown(object sender, MouseButtonEventArgs e)
+		private void FileItemImage_MouseDown(object sender, MouseButtonEventArgs e)
 		{
-			e.Handled = true;
 			var image = sender as Image;
 
 			// stage file
-			foreach (var item in changesListView.Items)
+			foreach (var item in unstagedChangesListView.Items)
 			{
 				var fileItem = ((FileItem)item);
 				if (image.Source == fileItem.icon)
 				{
+					if ((RepoUserControl.repo.RetrieveStatus(fileItem.filename) & FileStatus.Conflicted) != 0)
+					{
+						MessageBox.Show("File must be resolved before it can be staged");
+						return;
+					}
+
 					RepoUserControl.repo.Stage(fileItem.filename);
-					changesListView.Items.Remove(item);
-					changesListView2.Items.Add(item);
+					unstagedChangesListView.Items.Remove(item);
+					stagedChangesListView.Items.Add(item);
 					return;
 				}
 			}
 
 			// unstage file
-			foreach (var item in changesListView2.Items)
+			foreach (var item in stagedChangesListView.Items)
 			{
 				var fileItem = ((FileItem)item);
 				if (image.Source == fileItem.icon)
 				{
 					RepoUserControl.repo.Unstage(fileItem.filename);
-					changesListView2.Items.Remove(item);
-					changesListView.Items.Add(item);
+					stagedChangesListView.Items.Remove(item);
+					unstagedChangesListView.Items.Add(item);
 					return;
 				}
 			}
@@ -231,25 +261,25 @@ namespace GitGUI
 
 		private void stageAllButton_Click(object sender, RoutedEventArgs e)
 		{
-			var items = new FileItem[changesListView.Items.Count];
-			changesListView.Items.CopyTo(items, 0);
+			var items = new FileItem[unstagedChangesListView.Items.Count];
+			unstagedChangesListView.Items.CopyTo(items, 0);
 			foreach (var item in items)
 			{
 				RepoUserControl.repo.Stage(item.filename);
-				changesListView.Items.Remove(item);
-				changesListView2.Items.Add(item);
+				unstagedChangesListView.Items.Remove(item);
+				stagedChangesListView.Items.Add(item);
 			}
 		}
 
 		private void unstageAllButton_Click(object sender, RoutedEventArgs e)
 		{
-			var items = new FileItem[changesListView2.Items.Count];
-			changesListView2.Items.CopyTo(items, 0);
+			var items = new FileItem[stagedChangesListView.Items.Count];
+			stagedChangesListView.Items.CopyTo(items, 0);
 			foreach (var item in items)
 			{
 				RepoUserControl.repo.Unstage(item.filename);
-				changesListView2.Items.Remove(item);
-				changesListView.Items.Add(item);
+				stagedChangesListView.Items.Remove(item);
+				unstagedChangesListView.Items.Add(item);
 			}
 		}
 
@@ -294,6 +324,12 @@ namespace GitGUI
 			var conflict = RepoUserControl.repo.Index.Conflicts[item.filename];
 			var ours = RepoUserControl.repo.Lookup<Blob>(conflict.Ours.Id);
 			var theirs = RepoUserControl.repo.Lookup<Blob>(conflict.Theirs.Id);
+
+			// check if files are binary (if so open select source tool)
+			if (ours.IsBinary || theirs.IsBinary)
+			{
+				// TODO: make select ours or theirs window
+			}
 			
 			// copy base and parse
 			File.Copy(fullPath, fullPath + ".base", true);
@@ -382,7 +418,7 @@ namespace GitGUI
 		private void resolveSelectedButton_Click(object sender, RoutedEventArgs e)
 		{
 			// check for common mistakes
-			if (changesListView.SelectedIndex < 0)
+			if (unstagedChangesListView.SelectedIndex < 0)
 			{
 				MessageBox.Show("Must select 'Un-Staged' file");
 				return;
@@ -390,8 +426,8 @@ namespace GitGUI
 
 			try
 			{
-				var item = changesListView.SelectedItem as FileItem;
-				if (RepoUserControl.repo.RetrieveStatus(item.filename) != FileStatus.Conflicted)
+				var item = unstagedChangesListView.SelectedItem as FileItem;
+				if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) == 0)
 				{
 					MessageBox.Show("This file is not in conflict");
 					return;
@@ -412,9 +448,9 @@ namespace GitGUI
 			int conflictedFiles = 0;
 			try
 			{
-				foreach (FileItem item in changesListView.Items)
+				foreach (FileItem item in unstagedChangesListView.Items)
 				{
-					if (RepoUserControl.repo.RetrieveStatus(item.filename) == FileStatus.Conflicted)
+					if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) != 0)
 					{
 						++conflictedFiles;
 						if (resolveChange(item)) filesMerged = true;
