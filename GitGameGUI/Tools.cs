@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GitGUI
+namespace GitGameGUI
 {
 	static class Tools
 	{
@@ -13,6 +13,18 @@ namespace GitGUI
 			if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))) programFilesx86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 			else programFilesx86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 			programFilesx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).Replace(" (x86)", "");
+		}
+
+		public static bool IsBinaryFileType(string filename)
+		{
+			string ext = System.IO.Path.GetExtension(filename);
+			switch (ext)
+			{
+				case ".zip":
+					return true;
+			}
+
+			return false;
 		}
 	}
 }

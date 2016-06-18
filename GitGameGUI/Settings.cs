@@ -8,7 +8,7 @@ using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace GitGUI
+namespace GitGameGUI
 {
 	namespace XML
 	{

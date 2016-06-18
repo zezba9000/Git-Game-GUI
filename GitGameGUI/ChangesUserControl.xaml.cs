@@ -18,7 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GitGUI
+namespace GitGameGUI
 {
 	public class FileItem
 	{
@@ -42,8 +42,11 @@ namespace GitGUI
 
 	public partial class ChangesUserControl : UserControl
 	{
+		public static ChangesUserControl singleton;
+
 		public ChangesUserControl()
 		{
+			singleton = this;
 			InitializeComponent();
 			MainWindow.UpdateUICallback += UpdateUI;
 		}
@@ -133,7 +136,7 @@ namespace GitGUI
 
 				// check if binary file
 				var blob = RepoUserControl.repo.ObjectDatabase.CreateBlob(item.FilePath);
-				if (blob.IsBinary)
+				if (blob.IsBinary || Tools.IsBinaryFileType(item.FilePath))
 				{
 					diffTextBox.Text = "<< Binary File >>";
 					continue;
@@ -313,11 +316,22 @@ namespace GitGUI
 		{
 			var options = new PullOptions();
 			RepoUserControl.repo.Network.Pull(RepoUserControl.signature, options);
-			// TODO: check for merge issues
+			ResolveConflicts();
+		}
+
+		public static void ResolveConflicts()
+		{
+			// update ui before issue check
+			MainWindow.UpdateUI();
+
+			// check for merge issues and invoke resolve
+			if (RepoUserControl.repo.Index.Conflicts.Count() != 0) singleton.resolveAllButton_Click(null, null);
+
+			// update ui after issue check
 			MainWindow.UpdateUI();
 		}
 
-		private bool resolveChange(FileItem item)
+		private async Task<bool> resolveChange(FileItem item)
 		{
 			// get info
 			string fullPath = string.Format("{0}\\{1}", RepoUserControl.repoPath, item.filename);
@@ -328,7 +342,26 @@ namespace GitGUI
 			// check if files are binary (if so open select source tool)
 			if (ours.IsBinary || theirs.IsBinary)
 			{
-				// TODO: make select ours or theirs window
+				// open merge tool\
+				var mergeBinaryFileWindow = new MergeBinaryFileWindow();
+				mergeBinaryFileWindow.Owner = MainWindow.singleton;
+				mergeBinaryFileWindow.fileInConflict = item.filename;
+				mergeBinaryFileWindow.Show();
+				await mergeBinaryFileWindow.WaitForClose();
+				if (mergeBinaryFileWindow.result == MergeBinaryResults.Cancel) return false;
+
+				// check if we want theirs and copy
+				if (mergeBinaryFileWindow.result == MergeBinaryResults.UserTheirs)
+				{
+					using (var theirStream = theirs.GetContentStream())
+					using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None))
+					{
+						theirStream.CopyTo(stream);
+					}
+				}
+
+				RepoUserControl.repo.Index.Add(item.filename);
+				return true;
 			}
 			
 			// copy base and parse
@@ -415,7 +448,7 @@ namespace GitGUI
 			return wasModified;
 		}
 
-		private void resolveSelectedButton_Click(object sender, RoutedEventArgs e)
+		private async void resolveSelectedButton_Click(object sender, RoutedEventArgs e)
 		{
 			// check for common mistakes
 			if (unstagedChangesListView.SelectedIndex < 0)
@@ -433,7 +466,7 @@ namespace GitGUI
 					return;
 				}
 
-				if (resolveChange(item)) UpdateUI();
+				if (await resolveChange(item)) UpdateUI();
 			}
 			catch (Exception ex)
 			{
@@ -442,9 +475,8 @@ namespace GitGUI
 			}
 		}
 
-		private void resolveAllButton_Click(object sender, RoutedEventArgs e)
+		private async void resolveAllButton_Click(object sender, RoutedEventArgs e)
 		{
-			bool filesMerged = false;
 			int conflictedFiles = 0;
 			try
 			{
@@ -453,7 +485,7 @@ namespace GitGUI
 					if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) != 0)
 					{
 						++conflictedFiles;
-						if (resolveChange(item)) filesMerged = true;
+						if (await resolveChange(item) == false) break;
 					}
 				}
 			}
@@ -463,8 +495,7 @@ namespace GitGUI
 				return;
 			}
 
-			if (filesMerged) UpdateUI();
-
+			UpdateUI();
 			if (conflictedFiles == 0)
 			{
 				MessageBox.Show("No files in conflict");

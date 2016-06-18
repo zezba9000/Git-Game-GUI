@@ -6,12 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace GitGUI
+namespace GitGameGUI
 {
-	/// <summary>
-	/// Interaction logic for App.xaml
-	/// </summary>
 	public partial class App : Application
 	{
+		protected override void OnExit(ExitEventArgs e)
+		{
+			base.OnExit(e);
+		}
 	}
 }

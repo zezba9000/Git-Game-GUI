@@ -16,18 +16,21 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 
-namespace GitGUI
+namespace GitGameGUI
 {
 	public delegate void UpdateUICallbackMethod();
 
 	public partial class MainWindow : Window
 	{
+		public static MainWindow singleton;
+
 		public static UpdateUICallbackMethod UpdateUICallback, FinishedUpdatingUICallback;
 		public static bool uiUpdating;
 		public static XML.AppSettings appSettings;
 
 		public MainWindow()
 		{
+			singleton = this;
 			InitializeComponent();
 
 			// load settings

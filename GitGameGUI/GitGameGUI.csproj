@@ -8,8 +8,8 @@
     <ProjectGuid>{D8F9856F-5E24-47AF-887E-56843CED6106}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GitGUI</RootNamespace>
-    <AssemblyName>GitGUI</AssemblyName>
+    <RootNamespace>GitGameGUI</RootNamespace>
+    <AssemblyName>GitGameGUI</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -73,6 +73,9 @@
     <Compile Include="HistoryUserControl.xaml.cs">
       <DependentUpon>HistoryUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MergeBinaryFileWindow.xaml.cs">
+      <DependentUpon>MergeBinaryFileWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RepoUserControl.xaml.cs">
       <DependentUpon>RepoUserControl.xaml</DependentUpon>
     </Compile>
@@ -102,6 +105,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="MergeBinaryFileWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="RepoUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

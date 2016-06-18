@@ -14,14 +14,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GitGUI
+namespace GitGameGUI
 {
 	public partial class BranchesUserControl : UserControl
 	{
+		public static BranchesUserControl singleton;
 		public static Branch activeBranch;
 
 		public BranchesUserControl()
 		{
+			singleton = this;
 			InitializeComponent();
 			MainWindow.UpdateUICallback += UpdateUI;
 		}
@@ -30,6 +32,7 @@ namespace GitGUI
 		{
 			// clear ui
 			activeBranchComboBox.Items.Clear();
+			otherBranchComboBox.Items.Clear();
 			
 			// check if repo exists
 			if (RepoUserControl.repo == null) return;
@@ -96,10 +99,8 @@ namespace GitGUI
 			{
 				MessageBox.Show("Merge Branch Error: " + ex.Message);
 			}
-
-			MainWindow.UpdateUI();
-
-			// TODO: check for merge issues
+			
+			ChangesUserControl.ResolveConflicts();
 		}
 
 		private void addNewBranchButton_Click(object sender, RoutedEventArgs e)
