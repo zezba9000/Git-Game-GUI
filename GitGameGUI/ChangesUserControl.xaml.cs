@@ -45,28 +45,22 @@ namespace GitGUI
 		public ChangesUserControl()
 		{
 			InitializeComponent();
-
-			RepoUserControl.RepoChangedCallback += RepoChanged;
-			BranchesUserControl.BranchChangedCallback += BranchChanged;
+			MainWindow.UpdateUICallback += UpdateUI;
 		}
 
-		private void RepoChanged()
+		private void UpdateUI()
 		{
-			refreshChangedButton_Click(null, null);
-		}
-
-		private void BranchChanged()
-		{
-			refreshChangedButton_Click(null, null);
-		}
-
-		private void refreshChangedButton_Click(object sender, RoutedEventArgs e)
-		{
+			// clear ui
 			diffTextBlock.Text = "";
-			var repoStatus = RepoUserControl.repo.RetrieveStatus();
 			bool changesFound = false;
 			changesListView.Items.Clear();
 			changesListView2.Items.Clear();
+
+			// check if repo exists
+			if (RepoUserControl.repo == null) return;
+
+			// fill ui
+			var repoStatus = RepoUserControl.repo.RetrieveStatus();
 			foreach (var fileStatus in repoStatus)
 			{
 				changesFound = true;
@@ -83,9 +77,25 @@ namespace GitGUI
 				else if ((fileStatus.State & FileStatus.TypeChangeInWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
 				else if ((fileStatus.State & FileStatus.TypeChangeInIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
 				else if ((fileStatus.State & FileStatus.Conflicted) != 0) changesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
-				else if ((fileStatus.State & FileStatus.Ignored) != 0)
+				else if ((fileStatus.State & FileStatus.Ignored) != 0) {/*do nothing...*/}
+				else if ((fileStatus.State & FileStatus.Unreadable) != 0)
 				{
-					// do nothing...
+					string fullpath = RepoUserControl.repoPath + "\\" + fileStatus.FilePath;
+					if (File.Exists(fullpath))
+					{
+						// disable readonly if this is the cause
+						var attributes = File.GetAttributes(fullpath);
+						if ((attributes & FileAttributes.ReadOnly) != 0) File.SetAttributes(fullpath, attributes & ~FileAttributes.ReadOnly);
+
+						// check to make sure file is now readable
+						attributes = File.GetAttributes(fullpath);
+						if ((attributes & FileAttributes.ReadOnly) != 0) MessageBox.Show("File is not readable (you will need to fix the issue and refresh\nCause: " + fileStatus.FilePath);
+						else MessageBox.Show("Problem will file read (please fix and refresh)\nCause: " + fileStatus.FilePath);
+					}
+					else
+					{
+						MessageBox.Show("Expected file doesn't exist: " + fileStatus.FilePath);
+					}
 				}
 				else
 				{
@@ -96,9 +106,15 @@ namespace GitGUI
 			if (!changesFound) Console.WriteLine("No Changes");
 		}
 
+		private void refreshChangedButton_Click(object sender, RoutedEventArgs e)
+		{
+			MainWindow.UpdateUI();
+		}
+
 		private void changesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			e.Handled = true;
+			if (MainWindow.uiUpdating) return;
+			
 			if (changesListView.SelectedItem == null)
 			{
 				diffTextBlock.Text = "";
@@ -145,7 +161,8 @@ namespace GitGUI
 
 		private void changesListView2_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			e.Handled = true;
+			if (MainWindow.uiUpdating) return;
+			
 			if (changesListView2.SelectedItem == null)
 			{
 				diffTextBlock.Text = "";
@@ -238,7 +255,23 @@ namespace GitGUI
 
 		private void commitStagedButton_Click(object sender, RoutedEventArgs e)
 		{
-			RepoUserControl.repo.Commit(commitMessageTextBox.Text, RepoUserControl.signature, RepoUserControl.signature);
+			if (string.IsNullOrEmpty(commitMessageTextBox.Text))
+			{
+				MessageBox.Show("Must enter a commit message");
+				return;
+			}
+
+			try
+			{
+				RepoUserControl.repo.Commit(commitMessageTextBox.Text, RepoUserControl.signature, RepoUserControl.signature);
+				commitMessageTextBox.Text = "";
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to commit: " + ex.Message);
+			}
+
+			MainWindow.UpdateUI();
 		}
 
 		private void pushChangesButton_Click(object sender, RoutedEventArgs e)
@@ -251,7 +284,7 @@ namespace GitGUI
 			var options = new PullOptions();
 			RepoUserControl.repo.Network.Pull(RepoUserControl.signature, options);
 			// TODO: check for merge issues
-			BranchesUserControl.BranchChanged();
+			MainWindow.UpdateUI();
 		}
 
 		private bool resolveChange(FileItem item)
@@ -364,7 +397,7 @@ namespace GitGUI
 					return;
 				}
 
-				if (resolveChange(item)) BranchesUserControl.BranchChanged();
+				if (resolveChange(item)) UpdateUI();
 			}
 			catch (Exception ex)
 			{
@@ -394,7 +427,7 @@ namespace GitGUI
 				return;
 			}
 
-			if (filesMerged) BranchesUserControl.BranchChanged();
+			if (filesMerged) UpdateUI();
 
 			if (conflictedFiles == 0)
 			{

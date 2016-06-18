@@ -17,36 +17,27 @@ using System.Windows.Shapes;
 
 namespace GitGUI
 {
-	public delegate void RepoChangedCallbackMethod();
-
 	public partial class RepoUserControl : UserControl
 	{
 		private static RepoUserControl singleton;
-
-		public static event RepoChangedCallbackMethod RepoChangedCallback;
+		
 		public static Repository repo;
 		public static string repoPath;
 		public static Signature signature;
 		public static XML.RepoSettings repoSettings;
 		public static string mergeToolPath;
-		private bool canTriggerRepoChange;
 
 		public RepoUserControl()
 		{
 			singleton = this;
 			InitializeComponent();
-
-			MainWindow.SettingsChangedCallback += SettingsChanged;
-			BranchesUserControl.BranchChangedCallback += BranchesUserControl_BranchChangedCallback;
+			MainWindow.UpdateUICallback += UpdateUI;
+			MainWindow.FinishedUpdatingUICallback += FinishedUpdatingUICallback;
 		}
 
-		private void BranchesUserControl_BranchChangedCallback()
+		private void UpdateUI()
 		{
-			
-		}
-
-		private void SettingsChanged()
-		{
+			// update app settings
 			switch (MainWindow.appSettings.mergeDiffTool)
 			{
 				case "Meld": mergeDiffToolComboBox.SelectedIndex = 0; break;
@@ -54,15 +45,13 @@ namespace GitGUI
 				case "P4Merge": mergeDiffToolComboBox.SelectedIndex = 2; break;
 				case "DiffMerge": mergeDiffToolComboBox.SelectedIndex = 3; break;
 			}
-
-			canTriggerRepoChange = false;
+			
 			activeRepoComboBox.Items.Clear();
 			foreach (var repoSetting in MainWindow.appSettings.repositories)
 			{
 				activeRepoComboBox.Items.Add(repoSetting.path);
 			}
 			
-			canTriggerRepoChange = true;
 			if (activeRepoComboBox.Items.Count != 0) activeRepoComboBox.SelectedIndex = 0;
 		}
 
@@ -75,8 +64,13 @@ namespace GitGUI
 				repo = null;
 			}
 		}
+
+		private void FinishedUpdatingUICallback()
+		{
+			if (repo == null && activeRepoComboBox.SelectedItem != null) OpenRepo(activeRepoComboBox.Text);
+		}
 		
-		public static void RepoChanged(string repoPath)
+		public static void OpenRepo(string repoPath)
 		{
 			// dispose current
 			signature = null;
@@ -139,7 +133,7 @@ namespace GitGUI
 				}
 			}
 			
-			if (RepoChangedCallback != null) RepoChangedCallback();
+			MainWindow.UpdateUI();
 		}
 
 		private void cloneButton_Click(object sender, RoutedEventArgs e)
@@ -151,7 +145,7 @@ namespace GitGUI
 				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
 					Repository.Clone(repoPathTextBox.Text, dlg.SelectedPath);
-					RepoChanged(dlg.SelectedPath);
+					OpenRepo(dlg.SelectedPath);
 				}
 			}
 			catch (Exception ex)
@@ -168,10 +162,8 @@ namespace GitGUI
 				dlg.ShowNewFolderButton = false;
 				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
-					RepoChanged(dlg.SelectedPath);
-					canTriggerRepoChange = false;
+					OpenRepo(dlg.SelectedPath);
 					activeRepoComboBox.SelectedIndex = 0;
-					canTriggerRepoChange = true;
 				}
 			}
 			catch (Exception ex)
@@ -188,15 +180,19 @@ namespace GitGUI
 
 		private void activeRepoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (!canTriggerRepoChange) return;
+			if (MainWindow.uiUpdating) return;
 
-			if (activeRepoComboBox.Items.Count != 0) RepoChanged(activeRepoComboBox.SelectedItem as string);
-			else RepoChanged(null);
+			if (activeRepoComboBox.Items.Count != 0) OpenRepo(activeRepoComboBox.SelectedItem as string);
+			else OpenRepo(null);
 		}
 
 		private void mergeDiffToolComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (mergeDiffToolComboBox.SelectedValue == null) return;
+			if (mergeDiffToolComboBox.SelectedValue == null)
+			{
+				mergeToolPath = "";
+				return;
+			}
 
 			MainWindow.appSettings.mergeDiffTool = ((ComboBoxItem)mergeDiffToolComboBox.SelectedValue).Content as string;
 			string programFilesx86, programFilesx64;

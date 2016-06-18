@@ -16,36 +16,35 @@ using System.Windows.Shapes;
 
 namespace GitGUI
 {
-	public delegate void BranchChangedCallbackMethod();
-
 	public partial class BranchesUserControl : UserControl
 	{
-		public static event BranchChangedCallbackMethod BranchChangedCallback;
 		public static Branch activeBranch;
-		private bool canTriggerBranchChange;
 
 		public BranchesUserControl()
 		{
 			InitializeComponent();
-
-			RepoUserControl.RepoChangedCallback += RepoChanged;
+			MainWindow.UpdateUICallback += UpdateUI;
 		}
 
-		private void RepoChanged()
+		private void UpdateUI()
 		{
-			canTriggerBranchChange = false;
-			workingBranchComboBox.Items.Clear();
+			// clear ui
+			activeBranchComboBox.Items.Clear();
 			
+			// check if repo exists
+			if (RepoUserControl.repo == null) return;
+
+			// fill ui
 			try
 			{
 				foreach (var branch in RepoUserControl.repo.Branches)
 				{
 					if (branch.IsRemote) continue;
-					int i = workingBranchComboBox.Items.Add(branch.FriendlyName);
+					int i = activeBranchComboBox.Items.Add(branch.FriendlyName);
 					otherBranchComboBox.Items.Add(branch.FriendlyName);
 					if (branch.IsCurrentRepositoryHead)
 					{
-						workingBranchComboBox.SelectedIndex = i;
+						activeBranchComboBox.SelectedIndex = i;
 						activeBranch = branch;
 					}
 				}
@@ -54,23 +53,17 @@ namespace GitGUI
 			{
 				MessageBox.Show("Refresh Branches Error: " + e.Message);
 			}
-
-			canTriggerBranchChange = true;
+			
 			workingBranchComboBox_SelectionChanged(null, null);
-		}
-
-		public static void BranchChanged()
-		{
-			if (BranchChangedCallback != null) BranchChangedCallback();
 		}
 
 		private void workingBranchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (!canTriggerBranchChange) return;
+			if (MainWindow.uiUpdating) return;
 
 			try
 			{
-				var branch = RepoUserControl.repo.Branches[workingBranchComboBox.SelectedValue as string];
+				var branch = RepoUserControl.repo.Branches[activeBranchComboBox.SelectedValue as string];
 				if (activeBranch != branch)
 				{
 					var newBranch = RepoUserControl.repo.Checkout(branch);
@@ -82,14 +75,14 @@ namespace GitGUI
 				MessageBox.Show("Checkout Branch Error: " + ex.Message);
 			}
 			
-			BranchChanged();
+			MainWindow.UpdateUI();
 		}
 
 		private void mergeButton_Click(object sender, RoutedEventArgs e)
 		{
 			if (otherBranchComboBox.SelectedIndex < 0)
 			{
-				MessageBox.Show("Must select 'Source' branch");
+				MessageBox.Show("Must select 'Other' branch");
 				return;
 			}
 
@@ -98,14 +91,75 @@ namespace GitGUI
 				var srcBround = RepoUserControl.repo.Branches[otherBranchComboBox.SelectedValue as string];
 				var sig = new Signature("Andrew Witte", "zezba9000@gmail.com", DateTimeOffset.UtcNow);
 				RepoUserControl.repo.Merge(srcBround, sig);
-				BranchChanged();
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Merge Branch Error: " + ex.Message);
 			}
 
+			MainWindow.UpdateUI();
+
 			// TODO: check for merge issues
+		}
+
+		private void addNewBranchButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (string.IsNullOrEmpty(newBranchTextBox.Text))
+			{
+				MessageBox.Show("Must give the branch a name");
+				return;
+			}
+
+			try
+			{
+				RepoUserControl.repo.CreateBranch(newBranchTextBox.Text);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+			}
+
+			MainWindow.UpdateUI();
+		}
+
+		private void deleteBranchButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (otherBranchComboBox.SelectedItem == null)
+			{
+				MessageBox.Show("Must select branch");
+				return;
+			}
+
+			try
+			{
+				RepoUserControl.repo.Branches.Remove(otherBranchComboBox.Text);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+			}
+
+			MainWindow.UpdateUI();
+		}
+
+		private void renameBranchButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (string.IsNullOrEmpty(newBranchTextBox.Text))
+			{
+				MessageBox.Show("Must give the branch a name");
+				return;
+			}
+
+			try
+			{
+				RepoUserControl.repo.Branches.Rename(activeBranchComboBox.Text, newBranchTextBox.Text);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+			}
+
+			MainWindow.UpdateUI();
 		}
 	}
 }

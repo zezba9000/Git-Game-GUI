@@ -7,13 +7,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="500">
 	<Grid Background="DarkGray">
-		<ComboBox x:Name="workingBranchComboBox" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="workingBranchComboBox_SelectionChanged"/>
+		<ComboBox x:Name="activeBranchComboBox" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="workingBranchComboBox_SelectionChanged"/>
 		<ComboBox x:Name="otherBranchComboBox" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="120"/>
 		<Button x:Name="mergeButton" Content="Merge Source into Active" HorizontalAlignment="Center" Margin="168,44,154,0" VerticalAlignment="Top" Width="169" Click="mergeButton_Click"/>
 		<Label Content="Active Local Branch" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
 		<Label Content="Other Branch" HorizontalAlignment="Right" Margin="0,13,50,0" VerticalAlignment="Top"/>
 		<TextBox x:Name="newBranchTextBox" HorizontalAlignment="Left" Height="23" Margin="10,109,0,0" TextWrapping="Wrap" Text="New Branch Name" VerticalAlignment="Top" Width="120"/>
-		<Button x:Name="addNewBranchButton" Content="Add Branch" HorizontalAlignment="Left" Margin="10,137,0,0" VerticalAlignment="Top" Width="120"/>
-		<Button x:Name="deleteBranchButton" Content="Delete Branch" HorizontalAlignment="Left" Margin="370,71,0,0" VerticalAlignment="Top" Width="120"/>
+		<Button x:Name="addNewBranchButton" Content="Add New Branch" HorizontalAlignment="Left" Margin="10,137,0,0" VerticalAlignment="Top" Width="120" Click="addNewBranchButton_Click"/>
+		<Button x:Name="deleteBranchButton" Content="Delete Branch" HorizontalAlignment="Left" Margin="370,71,0,0" VerticalAlignment="Top" Width="120" Click="deleteBranchButton_Click"/>
+		<Button x:Name="renameBranchButton" Content="Rename Active Branch" HorizontalAlignment="Left" Margin="135,109,0,0" VerticalAlignment="Top" Width="156" Click="renameBranchButton_Click"/>
 	</Grid>
 </UserControl>

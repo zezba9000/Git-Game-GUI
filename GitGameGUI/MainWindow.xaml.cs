@@ -18,11 +18,12 @@ using System.ComponentModel;
 
 namespace GitGUI
 {
-	public delegate void SettingsChangedCallbackMethod();
+	public delegate void UpdateUICallbackMethod();
 
 	public partial class MainWindow : Window
 	{
-		public static SettingsChangedCallbackMethod SettingsChangedCallback;
+		public static UpdateUICallbackMethod UpdateUICallback, FinishedUpdatingUICallback;
+		public static bool uiUpdating;
 		public static XML.AppSettings appSettings;
 
 		public MainWindow()
@@ -31,7 +32,8 @@ namespace GitGUI
 
 			// load settings
 			appSettings = Settings.Load<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\Settings.xml");
-			if (SettingsChangedCallback != null) SettingsChangedCallback();
+			
+			UpdateUI();
 		}
 
 		protected override void OnClosing(CancelEventArgs e)
@@ -39,6 +41,15 @@ namespace GitGUI
 			RepoUserControl.Dispose();
 			Settings.Save<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\Settings.xml", appSettings);
 			base.OnClosing(e);
+		}
+
+		public static void UpdateUI()
+		{
+			uiUpdating = true;
+			if (UpdateUICallback != null) UpdateUICallback();
+			uiUpdating = false;
+
+			if (FinishedUpdatingUICallback != null) FinishedUpdatingUICallback();
 		}
 	}
 }
