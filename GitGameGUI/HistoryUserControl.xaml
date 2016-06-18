@@ -8,5 +8,6 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid Background="Red">
 		<TreeView x:Name="treeView" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0" Height="127" Width="140"/>
+		<Button x:Name="openGitkButton" Content="Open Gitk" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="75" Click="openGitkButton_Click"/>
 	</Grid>
 </UserControl>

@@ -83,6 +83,10 @@ namespace GitGUI
 				else if ((fileStatus.State & FileStatus.TypeChangeInWorkdir) != 0) changesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
 				else if ((fileStatus.State & FileStatus.TypeChangeInIndex) != 0) changesListView2.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
 				else if ((fileStatus.State & FileStatus.Conflicted) != 0) changesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
+				else if ((fileStatus.State & FileStatus.Ignored) != 0)
+				{
+					// do nothing...
+				}
 				else
 				{
 					MessageBox.Show("Unsuported File State: " + fileStatus.State);

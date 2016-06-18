@@ -169,6 +169,9 @@ namespace GitGUI
 				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
 					RepoChanged(dlg.SelectedPath);
+					canTriggerRepoChange = false;
+					activeRepoComboBox.SelectedIndex = 0;
+					canTriggerRepoChange = true;
 				}
 			}
 			catch (Exception ex)
@@ -179,6 +182,7 @@ namespace GitGUI
 
 		private void clearRepoListButton_Click(object sender, RoutedEventArgs e)
 		{
+			activeRepoComboBox.SelectedItem = null;
 			activeRepoComboBox.Items.Clear();
 		}
 
@@ -195,10 +199,8 @@ namespace GitGUI
 			if (mergeDiffToolComboBox.SelectedValue == null) return;
 
 			MainWindow.appSettings.mergeDiffTool = ((ComboBoxItem)mergeDiffToolComboBox.SelectedValue).Content as string;
-			string programFilesx86;
-			if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))) programFilesx86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-			else programFilesx86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-			string programFilesx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).Replace(" (x86)", "");
+			string programFilesx86, programFilesx64;
+			Tools.GetProgramFilesPath(out programFilesx86, out programFilesx64);
 			switch (MainWindow.appSettings.mergeDiffTool)
 			{
 				case "Meld": mergeToolPath = programFilesx86 + "\\Meld\\Meld.exe"; break;

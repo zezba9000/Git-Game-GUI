@@ -42,7 +42,7 @@ namespace GitGUI
 				{
 					if (branch.IsRemote) continue;
 					int i = workingBranchComboBox.Items.Add(branch.FriendlyName);
-					mergingSourceBranchComboBox.Items.Add(branch.FriendlyName);
+					otherBranchComboBox.Items.Add(branch.FriendlyName);
 					if (branch.IsCurrentRepositoryHead)
 					{
 						workingBranchComboBox.SelectedIndex = i;
@@ -87,7 +87,7 @@ namespace GitGUI
 
 		private void mergeButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (mergingSourceBranchComboBox.SelectedIndex < 0)
+			if (otherBranchComboBox.SelectedIndex < 0)
 			{
 				MessageBox.Show("Must select 'Source' branch");
 				return;
@@ -95,7 +95,7 @@ namespace GitGUI
 
 			try
 			{
-				var srcBround = RepoUserControl.repo.Branches[mergingSourceBranchComboBox.SelectedValue as string];
+				var srcBround = RepoUserControl.repo.Branches[otherBranchComboBox.SelectedValue as string];
 				var sig = new Signature("Andrew Witte", "zezba9000@gmail.com", DateTimeOffset.UtcNow);
 				RepoUserControl.repo.Merge(srcBround, sig);
 				BranchChanged();
