@@ -16,7 +16,7 @@
 
 - Per project settings saved in .gitgamegui file
 
-- Doesn't allow non resolved files to be staged
+- Doesn't allow non resolved files to be staged without warning.
 
 - Supports Meld, kDiff3, P4Merge and DiffMerge with no .gitconfig required
 

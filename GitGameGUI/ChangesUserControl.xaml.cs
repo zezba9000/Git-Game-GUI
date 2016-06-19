@@ -69,21 +69,79 @@ namespace GitGameGUI
 				changesFound = true;
 				bool stateHandled = false;
 				var state = fileStatus.State;
-				if ((state & FileStatus.ModifiedInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.ModifiedInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.NewInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.NewInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.DeletedFromWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.DeletedFromIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.RenamedInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.RenamedInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.TypeChangeInWorkdir) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.TypeChangeInIndex) != 0) {stagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.Conflicted) != 0) {unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath)); stateHandled = true;}
-				if ((state & FileStatus.Ignored) != 0) {stateHandled = true;}
-				if ((state & FileStatus.Unreadable) != 0)
+				if ((state & FileStatus.ModifiedInWorkdir) != 0)
+				{
+					unstagedChangesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.ModifiedInIndex) != 0)
+				{
+					stagedChangesListView.Items.Add(new FileItem("Icons/modified.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.NewInWorkdir) != 0)
+				{
+					unstagedChangesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.NewInIndex) != 0)
+				{
+					stagedChangesListView.Items.Add(new FileItem("Icons/new.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.DeletedFromWorkdir) != 0)
+				{
+					unstagedChangesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.DeletedFromIndex) != 0)
+				{
+					stagedChangesListView.Items.Add(new FileItem("Icons/deleted.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.RenamedInWorkdir) != 0)
+				{
+					unstagedChangesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.RenamedInIndex) != 0)
+				{
+					stagedChangesListView.Items.Add(new FileItem("Icons/renamed.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.TypeChangeInWorkdir) != 0)
+				{
+					unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.TypeChangeInIndex) != 0)
+				{
+					stagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.Conflicted) != 0)
+				{
+					unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
+					stateHandled = true;
+				}
+
+				if ((state & FileStatus.Ignored) != 0)
 				{
 					stateHandled = true;
+				}
+
+				if ((state & FileStatus.Unreadable) != 0)
+				{
 					string fullpath = RepoUserControl.repoPath + "\\" + fileStatus.FilePath;
 					if (File.Exists(fullpath))
 					{
@@ -105,6 +163,8 @@ namespace GitGameGUI
 					{
 						MessageBox.Show("Expected file doesn't exist: " + fileStatus.FilePath);
 					}
+
+					stateHandled = true;
 				}
 
 				if (!stateHandled)
@@ -237,8 +297,10 @@ namespace GitGameGUI
 				{
 					if ((RepoUserControl.repo.RetrieveStatus(fileItem.filename) & FileStatus.Conflicted) != 0)
 					{
-						MessageBox.Show("File must be resolved before it can be staged");
-						return;
+						if (MessageBox.Show("Are you sure you want to accept the current changes as merged?\nConflicted file: " + fileItem.filename, "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+						{
+							return;
+						}
 					}
 
 					RepoUserControl.repo.Stage(fileItem.filename);
@@ -268,6 +330,14 @@ namespace GitGameGUI
 			unstagedChangesListView.Items.CopyTo(items, 0);
 			foreach (var item in items)
 			{
+				if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) != 0)
+				{
+					if (MessageBox.Show("Are you sure you want to accept the current changes as merged?\nConflicted file: " + item.filename, "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+					{
+						continue;
+					}
+				}
+
 				RepoUserControl.repo.Stage(item.filename);
 				unstagedChangesListView.Items.Remove(item);
 				stagedChangesListView.Items.Add(item);
@@ -342,12 +412,14 @@ namespace GitGameGUI
 			// check if files are binary (if so open select source tool)
 			if (ours.IsBinary || theirs.IsBinary)
 			{
-				// open merge tool\
+				// open merge tool
+				MainWindow.CanInteractWithUI(false);
 				var mergeBinaryFileWindow = new MergeBinaryFileWindow();
 				mergeBinaryFileWindow.Owner = MainWindow.singleton;
 				mergeBinaryFileWindow.fileInConflict = item.filename;
 				mergeBinaryFileWindow.Show();
 				await mergeBinaryFileWindow.WaitForClose();
+				MainWindow.CanInteractWithUI(true);
 				if (mergeBinaryFileWindow.result == MergeBinaryResults.Cancel) return false;
 
 				// check if we want theirs and copy
@@ -360,7 +432,7 @@ namespace GitGameGUI
 					}
 				}
 
-				RepoUserControl.repo.Index.Add(item.filename);
+				RepoUserControl.repo.Stage(item.filename);
 				return true;
 			}
 			
@@ -436,13 +508,20 @@ namespace GitGameGUI
 			{
 				wasModified = true;
 				File.Copy(fullPath + ".base", fullPath, true);
-				RepoUserControl.repo.Index.Add(item.filename);
+				RepoUserControl.repo.Stage(item.filename);
 			}
 
 			// delete temp files
 			if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
 			if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
 			if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
+
+			// check if user accepts the current state of the merge
+			if (MessageBox.Show("No changes detected. Accept as merged?", "Accept Merge?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			{
+				RepoUserControl.repo.Stage(item.filename);
+				wasModified = true;
+			}
 
 			// finish
 			return wasModified;

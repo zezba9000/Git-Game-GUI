@@ -54,5 +54,10 @@ namespace GitGameGUI
 
 			if (FinishedUpdatingUICallback != null) FinishedUpdatingUICallback();
 		}
+
+		public static void CanInteractWithUI(bool enabled)
+		{
+			singleton.tabControl.IsEnabled = enabled;
+		}
 	}
 }
