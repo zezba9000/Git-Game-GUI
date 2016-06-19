@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,22 @@ namespace GitGameGUI
 			}
 
 			return false;
+		}
+
+		public static void RunCmd(string operation, string workingDirectory)
+		{
+			var process = new Process();
+			process.StartInfo.FileName = "cmd";
+			process.StartInfo.WorkingDirectory = workingDirectory;
+			process.StartInfo.RedirectStandardInput = true;
+			//process.StartInfo.RedirectStandardOutput = true;
+			process.StartInfo.CreateNoWindow = true;
+			process.StartInfo.UseShellExecute = false;
+			process.Start();
+			process.StandardInput.WriteLine(operation);
+			process.StandardInput.Flush();
+			process.StandardInput.Close();
+			process.WaitForExit();
 		}
 	}
 }

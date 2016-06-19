@@ -158,24 +158,14 @@ namespace GitGameGUI
 		private void AddDefaultGitLFS()
 		{
 			// init git lfs
-			var process = new Process();
-			process.StartInfo.FileName = "git-lfs";
-			process.StartInfo.Arguments = "install";
-			process.StartInfo.WorkingDirectory = repoPath;
-			process.Start();
-			process.WaitForExit();
+			Tools.RunCmd("git-lfs install", repoPath);
 
 			// add default ext to git lfs
 			if (MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
 				foreach (string ext in MainWindow.appSettings.gitLFS_IgnoreExts)
 				{
-					process = new Process();
-					process.StartInfo.FileName = "git-lfs";
-					process.StartInfo.Arguments = string.Format("track \"*{0}\"", ext);
-					process.StartInfo.WorkingDirectory = repoPath;
-					process.Start();
-					process.WaitForExit();
+					Tools.RunCmd(string.Format("git-lfs track \"*{0}\"", ext), repoPath);
 				}
 			}
 		}
@@ -327,10 +317,7 @@ namespace GitGameGUI
 
 			try
 			{
-				//var process = Process.Start("git-lfs", string.Format("track \"*{0}\"", gitLFSExtTextBox.Text));
-				//process.StartInfo.WorkingDirectory = repoPath;
-				//process.Start();
-				//process.WaitForExit();
+				Tools.RunCmd(string.Format("git-lfs track \"*{0}\"", gitLFSExtTextBox.Text), repoPath);
 			}
 			catch (Exception ex)
 			{
@@ -357,20 +344,16 @@ namespace GitGameGUI
 
 		private void removeGitLFSButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you can changes pushed while using Git-LFS, its suggested you re-create your remote repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you commit/pushed while using Git-LFS, its suggested you re-create your remote repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
 			{
 				return;
 			}
 
 			try
 			{
-				//var process = Process.Start("git-lfs", "uninit");
-				//process.StartInfo.WorkingDirectory = repoPath;
-				//process.Start();
-				//process.WaitForExit();
-
-				//if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
-				//if (Directory.Exists(repoPath)) Directory.Delete(repoPath, true);
+				Tools.RunCmd("git-lfs uninit", repoPath);
+				if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
+				if (Directory.Exists(repoPath + "\\.git\\lfs")) Directory.Delete(repoPath + "\\.git\\lfs", true);
 			}
 			catch (Exception ex)
 			{
