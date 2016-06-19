@@ -1,4 +1,4 @@
-# Git-Game-GUI (GPL-2)
+# Git-Game-GUI
 
 
 
