@@ -22,6 +22,7 @@ namespace GitGameGUI
 		{
 			[XmlAttribute("MergeDiffTool")] public string mergeDiffTool = "Meld";
 			[XmlElement("Repository")] public List<Repository> repositories = new List<Repository>();
+			[XmlElement("GitLFS-IgnoreExt")] public List<string> gitLFS_IgnoreExts = new List<string>();
 		}
 
 		[XmlRoot("RepoSettings")]

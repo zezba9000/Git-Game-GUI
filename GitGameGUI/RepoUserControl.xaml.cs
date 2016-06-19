@@ -2,6 +2,8 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +28,7 @@ namespace GitGameGUI
 		public static Signature signature;
 		public static XML.RepoSettings repoSettings;
 		public static string mergeToolPath;
+		bool canTriggerRepoChange = true;
 
 		public RepoUserControl()
 		{
@@ -108,6 +111,13 @@ namespace GitGameGUI
 						if (repoSetting.path == repoPath)
 						{
 							exists = true;
+							MainWindow.appSettings.repositories.Remove(repoSetting);
+							MainWindow.appSettings.repositories.Insert(0, repoSetting);
+							singleton.canTriggerRepoChange = false;
+							singleton.activeRepoComboBox.Items.Remove(repoPath);
+							singleton.activeRepoComboBox.Items.Insert(0, repoPath);
+							singleton.activeRepoComboBox.SelectedIndex = 0;
+							singleton.canTriggerRepoChange = true;
 							break;
 						}
 					}
@@ -131,9 +141,69 @@ namespace GitGameGUI
 					repo.Dispose();
 					repo = null;
 				}
+
+				// remove bad repo path
+				foreach (var repoSetting in MainWindow.appSettings.repositories.ToArray())
+				{
+					if (repoSetting.path == repoPath) MainWindow.appSettings.repositories.Remove(repoSetting);
+				}
+				
+				singleton.activeRepoComboBox.Items.Remove(repoPath);
+				singleton.activeRepoComboBox.SelectedItem = null;
 			}
 			
 			MainWindow.UpdateUI();
+		}
+
+		private void AddDefaultGitLFS()
+		{
+			// init git lfs
+			var process = new Process();
+			process.StartInfo.FileName = "git-lfs";
+			process.StartInfo.Arguments = "install";
+			process.StartInfo.WorkingDirectory = repoPath;
+			process.Start();
+			process.WaitForExit();
+
+			// add default ext to git lfs
+			if (MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			{
+				foreach (string ext in MainWindow.appSettings.gitLFS_IgnoreExts)
+				{
+					process = new Process();
+					process.StartInfo.FileName = "git-lfs";
+					process.StartInfo.Arguments = string.Format("track \"*{0}\"", ext);
+					process.StartInfo.WorkingDirectory = repoPath;
+					process.Start();
+					process.WaitForExit();
+				}
+			}
+		}
+
+		private void createButton_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				var dlg = new System.Windows.Forms.FolderBrowserDialog();
+				dlg.ShowNewFolderButton = true;
+				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+				{
+					// init git repo
+					Repository.Init(dlg.SelectedPath, false);
+
+					// ask user for default git lfs support
+					if (MessageBox.Show("Do you want to init Git-LFS?", "Git-LFS?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+					{
+						AddDefaultGitLFS();
+					}
+
+					OpenRepo(dlg.SelectedPath);
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Clone Repo Error: " + ex.Message);
+			}
 		}
 
 		private void cloneButton_Click(object sender, RoutedEventArgs e)
@@ -180,7 +250,7 @@ namespace GitGameGUI
 
 		private void activeRepoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (MainWindow.uiUpdating) return;
+			if (MainWindow.uiUpdating || !canTriggerRepoChange) return;
 
 			if (activeRepoComboBox.Items.Count != 0) OpenRepo(activeRepoComboBox.SelectedItem as string);
 			else OpenRepo(null);
@@ -203,6 +273,108 @@ namespace GitGameGUI
 				case "kDiff3": mergeToolPath = programFilesx64 + "\\KDiff3\\kdiff3.exe"; break;
 				case "P4Merge": mergeToolPath = programFilesx64 + "\\Perforce\\p4merge.exe"; break;
 				case "DiffMerge": mergeToolPath = programFilesx64 + "\\SourceGear\\Common\\\\DiffMerge\\sgdm.exe"; break;
+			}
+		}
+
+		private void gitLFSSupportCheckBox_Checked(object sender, RoutedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.validateLFS = gitLFSSupportCheckBox.IsChecked == true ? true : false;
+		}
+
+		private void gitignoreExistsCheckBox_Checked(object sender, RoutedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.validateGitignore = gitignoreExistsCheckBox.IsChecked == true ? true : false;
+		}
+
+		private void autoCommitMergeCheckBox_Checked(object sender, RoutedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.autoCommit = autoCommitMergeCheckBox.IsChecked == true ? true : false;
+		}
+
+		private void autoPushRemoteMergeCheckBox_Checked(object sender, RoutedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.autoPush = autoPushRemoteMergeCheckBox.IsChecked == true ? true : false;
+		}
+
+		private void nameTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.signatureName = nameTextBox.Text;
+		}
+
+		private void emailTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.signatureEmail = emailTextBox.Text;
+		}
+
+		private void addGitLFSExtButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (string.IsNullOrEmpty(gitLFSExtTextBox.Text) || gitLFSExtTextBox.Text.Length == 1)
+			{
+				MessageBox.Show("Must enter a valid ext type");
+				return;
+			}
+
+			if (gitLFSExtTextBox.Text[0] != '.')
+			{
+				MessageBox.Show("Invalid ext format (must prefix with '.')");
+				return;
+			}
+
+			if (MessageBox.Show(string.Format("Are you sure you want to add ext: {0}\nThis is permanent!", gitLFSExtTextBox.Text), "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			{
+				return;
+			}
+
+			try
+			{
+				//var process = Process.Start("git-lfs", string.Format("track \"*{0}\"", gitLFSExtTextBox.Text));
+				//process.StartInfo.WorkingDirectory = repoPath;
+				//process.Start();
+				//process.WaitForExit();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Add Git-LFS Ext Error: " + ex.Message);
+			}
+		}
+
+		private void addGitLFSButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (MessageBox.Show("Are you sure you want to add Git-LFS?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			{
+				return;
+			}
+
+			try
+			{
+				AddDefaultGitLFS();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Add Gir-LFS Error: " + ex.Message);
+			}
+		}
+
+		private void removeGitLFSButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you can changes pushed while using Git-LFS, its suggested you re-create your remote repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			{
+				return;
+			}
+
+			try
+			{
+				//var process = Process.Start("git-lfs", "uninit");
+				//process.StartInfo.WorkingDirectory = repoPath;
+				//process.Start();
+				//process.WaitForExit();
+
+				//if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
+				//if (Directory.Exists(repoPath)) Directory.Delete(repoPath, true);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Remove Gir-LFS Error: " + ex.Message);
 			}
 		}
 	}

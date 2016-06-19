@@ -35,6 +35,16 @@ namespace GitGameGUI
 
 			// load settings
 			appSettings = Settings.Load<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\Settings.xml");
+			if (appSettings.gitLFS_IgnoreExts.Count == 0)
+			{
+				appSettings.gitLFS_IgnoreExts.AddRange(new List<string>()
+				{
+					".psd", ".jpg", ".jpeg", ".png", ".bmp", ".tga",// image types
+					".mpeg", ".mov", ".avi", ".mp4", ".wmv",// video types
+					".wav", ".mp3", ".ogg", ".wma", ".acc",// audeo types
+					".bin", ".data", ".raw",// unknown binary types
+				});
+			}
 			
 			UpdateUI();
 		}
