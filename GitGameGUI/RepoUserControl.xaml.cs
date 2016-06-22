@@ -19,16 +19,86 @@ using System.Windows.Shapes;
 
 namespace GitGameGUI
 {
-	public partial class RepoUserControl : UserControl
+    public class LFSFilter : Filter
+    {
+        public LFSFilter(string name, IEnumerable<FilterAttributeEntry> attributes) : base(name, attributes)
+        {
+            
+        }
+
+        //Stream stream;
+
+        protected override void Clean(string path, string root, Stream input, Stream output)
+        {
+            //base.Clean(path, root, input, output);
+            
+            using (var process = new Process())
+            {
+                process.StartInfo.FileName = "git-lfs";
+			    process.StartInfo.Arguments = "clean";
+			    process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+			    process.StartInfo.RedirectStandardInput = true;
+			    process.StartInfo.RedirectStandardOutput = true;
+			    process.StartInfo.CreateNoWindow = true;
+			    process.StartInfo.UseShellExecute = false;
+			    process.Start();
+
+                input.CopyTo(process.StandardInput.BaseStream);
+                input.Flush();
+                process.StandardInput.Flush();
+                process.StandardInput.Close();
+                input.Close();
+                
+			    process.WaitForExit();
+
+                process.StandardOutput.BaseStream.CopyTo(output);
+                process.StandardOutput.BaseStream.Flush();
+                output.Flush();
+                output.Close();
+                process.StandardOutput.Close();
+            }
+        }
+
+        protected override void Complete(string path, string root, Stream output)
+        {
+            output.Close();
+            //base.Complete(path, root, output);
+        }
+
+        protected override void Create(string path, string root, FilterMode mode)
+        {
+            //stream = new FileStream(@"D:\Dev\TEMP\MEME\YAHOO.jpg", FileMode.Create, FileAccess.Write);
+            //stream = new MemoryStream();
+
+            base.Create(path, root, mode);
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+        }
+
+        protected override void Smudge(string path, string root, Stream input, Stream output)
+        {
+            //base.Smudge(path, root, input, output);
+
+            throw new NotImplementedException();
+        }
+    }
+
+    public partial class RepoUserControl : UserControl
 	{
 		private static RepoUserControl singleton;
 		
 		public static Repository repo;
 		public static string repoPath;
+
 		public static Signature signature;
 		public static XML.RepoSettings repoSettings;
 		public static string mergeToolPath;
 		bool canTriggerRepoChange = true;
+
+        FilterRegistration lfsFilter;
 
 		public RepoUserControl()
 		{
@@ -36,6 +106,13 @@ namespace GitGameGUI
 			InitializeComponent();
 			MainWindow.UpdateUICallback += UpdateUI;
 			MainWindow.FinishedUpdatingUICallback += FinishedUpdatingUICallback;
+
+            var filteredFiles = new List<FilterAttributeEntry>()
+            {
+                new FilterAttributeEntry("lfs")
+            };
+            var filter = new LFSFilter("lfs", filteredFiles);
+            lfsFilter = GlobalSettings.RegisterFilter(filter);
 		}
 
 		private void UpdateUI()
@@ -179,21 +256,23 @@ namespace GitGameGUI
 				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
 					// init git repo
-					Repository.Init(dlg.SelectedPath, false);
+					Repository.Init(dlg.SelectedPath);
+					OpenRepo(dlg.SelectedPath);
 
 					// ask user for default git lfs support
 					if (MessageBox.Show("Do you want to init Git-LFS?", "Git-LFS?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 					{
 						AddDefaultGitLFS();
 					}
-
-					OpenRepo(dlg.SelectedPath);
 				}
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Clone Repo Error: " + ex.Message);
+				return;
 			}
+
+			MessageBox.Show("Finished Successfully!");
 		}
 
 		private void cloneButton_Click(object sender, RoutedEventArgs e)
