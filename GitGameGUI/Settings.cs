@@ -30,6 +30,8 @@ namespace GitGameGUI
 		{
 			[XmlAttribute("SignatureName")] public string signatureName = "First Last";
 			[XmlAttribute("SignatureEmail")] public string signatureEmail = "username@email.com";
+			[XmlAttribute("Username")] public string username = "Username";
+			[XmlAttribute("Password")] public string password = "password";
 			[XmlAttribute("ValidateLFS")] public bool validateLFS = true;
 			[XmlAttribute("ValidateGitignore")] public bool validateGitignore = true;
 			[XmlAttribute("AutoCommit")] public bool autoCommit = true;

@@ -19,58 +19,75 @@ using System.Windows.Shapes;
 
 namespace GitGameGUI
 {
-    public class LFSFilter : Filter
+	public class LFSFilter : Filter
     {
+		private Process process;
+		FilterMode mode;
+
         public LFSFilter(string name, IEnumerable<FilterAttributeEntry> attributes) : base(name, attributes)
         {
-            
         }
-
-        //Stream stream;
 
         protected override void Clean(string path, string root, Stream input, Stream output)
         {
-            //base.Clean(path, root, input, output);
-            
-            using (var process = new Process())
-            {
-                process.StartInfo.FileName = "git-lfs";
-			    process.StartInfo.Arguments = "clean";
-			    process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
-			    process.StartInfo.RedirectStandardInput = true;
-			    process.StartInfo.RedirectStandardOutput = true;
-			    process.StartInfo.CreateNoWindow = true;
-			    process.StartInfo.UseShellExecute = false;
-			    process.Start();
-
-                input.CopyTo(process.StandardInput.BaseStream);
-                input.Flush();
-                process.StandardInput.Flush();
-                process.StandardInput.Close();
-                input.Close();
-                
-			    process.WaitForExit();
-
-                process.StandardOutput.BaseStream.CopyTo(output);
-                process.StandardOutput.BaseStream.Flush();
-                output.Flush();
-                output.Close();
-                process.StandardOutput.Close();
-            }
+			try
+			{
+				// write all file data to stdin
+				input.CopyTo(process.StandardInput.BaseStream);
+				input.Flush();
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
         }
 
         protected override void Complete(string path, string root, Stream output)
         {
-            output.Close();
-            //base.Complete(path, root, output);
+			try
+			{
+				// finalize stdin and wait for git-lfs to finish
+				process.StandardInput.Flush();
+				process.StandardInput.Close();
+				if (mode == FilterMode.Clean) process.WaitForExit();
+			
+				// write git-lfs pointer for 'clean' to git or file data for 'smudge' to working copy
+				process.StandardOutput.BaseStream.Flush();
+				process.StandardOutput.BaseStream.CopyTo(output);
+				output.Flush();
+				output.Close();
+				process.StandardOutput.Close();
+			
+				if (mode == FilterMode.Smudge) process.WaitForExit();
+				process.Dispose();
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
         }
 
         protected override void Create(string path, string root, FilterMode mode)
         {
-            //stream = new FileStream(@"D:\Dev\TEMP\MEME\YAHOO.jpg", FileMode.Create, FileAccess.Write);
-            //stream = new MemoryStream();
+			this.mode = mode;
 
-            base.Create(path, root, mode);
+			try
+			{
+				// launch git-lfs
+				process = new Process();
+				process.StartInfo.FileName = "git-lfs";
+				process.StartInfo.Arguments = mode == FilterMode.Clean ? "clean" : "smudge";
+				process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+				process.StartInfo.RedirectStandardInput = true;
+				process.StartInfo.RedirectStandardOutput = true;
+				process.StartInfo.CreateNoWindow = false;
+				process.StartInfo.UseShellExecute = false;
+				process.Start();
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
         }
 
         protected override void Initialize()
@@ -80,9 +97,16 @@ namespace GitGameGUI
 
         protected override void Smudge(string path, string root, Stream input, Stream output)
         {
-            //base.Smudge(path, root, input, output);
-
-            throw new NotImplementedException();
+            try
+			{
+				// write git-lfs pointer to stdin
+				input.CopyTo(process.StandardInput.BaseStream);
+				input.Flush();
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show(e.Message);
+			}
         }
     }
 
@@ -94,6 +118,7 @@ namespace GitGameGUI
 		public static string repoPath;
 
 		public static Signature signature;
+		public static UsernamePasswordCredentials credentials;
 		public static XML.RepoSettings repoSettings;
 		public static string mergeToolPath;
 		bool canTriggerRepoChange = true;
@@ -107,12 +132,23 @@ namespace GitGameGUI
 			MainWindow.UpdateUICallback += UpdateUI;
 			MainWindow.FinishedUpdatingUICallback += FinishedUpdatingUICallback;
 
+			// create lfs filter
             var filteredFiles = new List<FilterAttributeEntry>()
             {
                 new FilterAttributeEntry("lfs")
             };
             var filter = new LFSFilter("lfs", filteredFiles);
             lfsFilter = GlobalSettings.RegisterFilter(filter);
+			
+			// create signature
+			signature = new Signature("default", "default", DateTimeOffset.UtcNow);
+
+			// create credentials
+			credentials = new UsernamePasswordCredentials
+			{
+				Username = "default",
+				Password = "default"
+			};
 		}
 
 		private void UpdateUI()
@@ -154,6 +190,7 @@ namespace GitGameGUI
 		{
 			// dispose current
 			signature = null;
+			credentials = null;
 			RepoUserControl.repoPath = null;
 			if (repo != null)
 			{
@@ -175,11 +212,20 @@ namespace GitGameGUI
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
 					singleton.autoCommitMergeCheckBox.IsChecked = repoSettings.autoCommit;
 					singleton.autoPushRemoteMergeCheckBox.IsChecked = repoSettings.autoPush;
-					singleton.nameTextBox.Text = repoSettings.signatureName;
-					singleton.emailTextBox.Text = repoSettings.signatureEmail;
+					singleton.sigNameTextBox.Text = repoSettings.signatureName;
+					singleton.sigEmailTextBox.Text = repoSettings.signatureEmail;
+					singleton.usernameTextBox.Text = repoSettings.username;
+					singleton.passTextBox.Text = repoSettings.password;
 
 					// create signature
 					signature = new Signature(repoSettings.signatureName, repoSettings.signatureEmail, DateTimeOffset.UtcNow);
+
+					// create credentials
+					credentials = new UsernamePasswordCredentials
+					{
+						Username = repoSettings.username,
+						Password = repoSettings.password
+					};
 
 					// add to settings
 					bool exists = false;
@@ -206,6 +252,8 @@ namespace GitGameGUI
 						MainWindow.appSettings.repositories.Insert(0, repoSetting);
 						singleton.activeRepoComboBox.Items.Insert(0, repoPath);
 					}
+
+					if (!File.Exists(repoPath + "\\.gitgamegui")) Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
 				}
 			}
 			catch (Exception e)
@@ -268,7 +316,7 @@ namespace GitGameGUI
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Clone Repo Error: " + ex.Message);
+				MessageBox.Show("Create Repo Error: " + ex.Message);
 				return;
 			}
 
@@ -283,7 +331,10 @@ namespace GitGameGUI
 				dlg.ShowNewFolderButton = true;
 				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
-					Repository.Clone(repoPathTextBox.Text, dlg.SelectedPath);
+					var options = new CloneOptions();
+					options.IsBare = false;
+					options.CredentialsProvider = (_url, _user, _cred) => credentials;
+					Repository.Clone(repoPathTextBox.Text, dlg.SelectedPath, options);
 					OpenRepo(dlg.SelectedPath);
 				}
 			}
@@ -313,7 +364,7 @@ namespace GitGameGUI
 
 		private void clearRepoListButton_Click(object sender, RoutedEventArgs e)
 		{
-			activeRepoComboBox.SelectedItem = null;
+			MainWindow.appSettings.repositories.Clear();
 			activeRepoComboBox.Items.Clear();
 		}
 
@@ -365,14 +416,26 @@ namespace GitGameGUI
 			if (repoSettings != null) repoSettings.autoPush = autoPushRemoteMergeCheckBox.IsChecked == true ? true : false;
 		}
 
-		private void nameTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		private void sigNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.signatureName = nameTextBox.Text;
+			if (repoSettings != null) repoSettings.signatureName = sigNameTextBox.Text;
 		}
 
-		private void emailTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		private void sigEmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.signatureEmail = emailTextBox.Text;
+			if (repoSettings != null) repoSettings.signatureEmail = sigEmailTextBox.Text;
+		}
+
+		private void usernameTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.username = usernameTextBox.Text;
+			if (credentials != null) credentials.Username = usernameTextBox.Text;
+		}
+
+		private void passTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (repoSettings != null) repoSettings.password = passTextBox.Text;
+			if (credentials != null) credentials.Password = passTextBox.Text;
 		}
 
 		private void addGitLFSExtButton_Click(object sender, RoutedEventArgs e)
