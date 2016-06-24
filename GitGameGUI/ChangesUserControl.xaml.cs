@@ -406,9 +406,22 @@ namespace GitGameGUI
 		{
 			try
 			{
-				var options = new PushOptions();
-				options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
-				RepoUserControl.repo.Network.Push(BranchesUserControl.activeBranch, options);
+				//var options = new PushOptions();
+				//options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
+				//RepoUserControl.repo.Network.Push(BranchesUserControl.activeBranch, options);
+
+				// hack to fix git-lfs push being broken
+				using (var process = new Process())
+				{
+					process.StartInfo.FileName = "git";
+					process.StartInfo.Arguments = "push";
+					process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+					process.StartInfo.CreateNoWindow = false;
+					process.StartInfo.UseShellExecute = false;
+
+					process.Start();
+					process.WaitForExit();
+				}
 			}
 			catch (Exception ex)
 			{
@@ -423,8 +436,6 @@ namespace GitGameGUI
 				var options = new PullOptions();
 				options.FetchOptions = new FetchOptions();
 				options.FetchOptions.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
-				options.MergeOptions = new MergeOptions();
-				options.MergeOptions.FailOnConflict = false;
 				RepoUserControl.repo.Network.Pull(RepoUserControl.signature, options);
 				ResolveConflicts();
 			}
