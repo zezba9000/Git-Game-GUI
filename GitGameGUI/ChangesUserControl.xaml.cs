@@ -334,6 +334,21 @@ namespace GitGameGUI
 			}
 		}
 
+		private void revertAllButton_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				// TODO add yes no to continue
+				RepoUserControl.repo.Reset(ResetMode.Hard);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to reset: " + ex.Message);
+			}
+
+			MainWindow.UpdateUI();
+		}
+
 		private void stageAllButton_Click(object sender, RoutedEventArgs e)
 		{
 			var items = new FileItem[unstagedChangesListView.Items.Count];

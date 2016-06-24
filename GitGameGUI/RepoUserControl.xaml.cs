@@ -35,6 +35,7 @@ namespace GitGameGUI
 				// write all file data to stdin
 				input.CopyTo(process.StandardInput.BaseStream);
 				input.Flush();
+				input.Close();
 			}
 			catch (Exception e)
 			{
@@ -102,6 +103,7 @@ namespace GitGameGUI
 				// write git-lfs pointer to stdin
 				input.CopyTo(process.StandardInput.BaseStream);
 				input.Flush();
+				input.Close();
 			}
 			catch (Exception e)
 			{

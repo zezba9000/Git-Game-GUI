@@ -23,6 +23,7 @@
 		<Button x:Name="commitStagedButton" Content="Commit" HorizontalAlignment="Left" Margin="326,241,0,0" VerticalAlignment="Top" Width="75" Click="commitStagedButton_Click"/>
 		<Button x:Name="pushChangesButton" Content="Push" HorizontalAlignment="Left" Margin="406,241,0,0" VerticalAlignment="Top" Width="75" Click="pushChangesButton_Click"/>
 		<Button x:Name="pullChangesButton" Content="Pull" HorizontalAlignment="Left" Margin="406,266,0,0" VerticalAlignment="Top" Width="75" Click="pullChangesButton_Click"/>
+		<Button x:Name="revertAllButton" Content="Revert All" HorizontalAlignment="Left" Margin="234,35,0,0" VerticalAlignment="Top" Width="75" Click="revertAllButton_Click"/>
 		<Button x:Name="stageAllButton" Content="Stage All" HorizontalAlignment="Left" Margin="234,10,0,0" VerticalAlignment="Top" Width="75" Click="stageAllButton_Click"/>
 		<Button x:Name="unstageAllButton" Content="Unstage All" HorizontalAlignment="Left" Margin="234,129,0,0" VerticalAlignment="Top" Width="75" Click="unstageAllButton_Click"/>
 		<Button x:Name="resolveSelectedButton" Content="Resolve Sel" HorizontalAlignment="Left" Margin="10,241,0,0" VerticalAlignment="Top" Width="75" Click="resolveSelectedButton_Click"/>
