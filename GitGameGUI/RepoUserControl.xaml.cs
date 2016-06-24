@@ -35,11 +35,10 @@ namespace GitGameGUI
 				// write all file data to stdin
 				input.CopyTo(process.StandardInput.BaseStream);
 				input.Flush();
-				input.Close();
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show(e.Message);
+				MessageBox.Show("Clean Error: " + e.Message);
 			}
         }
 
@@ -50,23 +49,36 @@ namespace GitGameGUI
 				// finalize stdin and wait for git-lfs to finish
 				process.StandardInput.Flush();
 				process.StandardInput.Close();
-				if (mode == FilterMode.Clean) process.WaitForExit();
-			
-				// write git-lfs pointer for 'clean' to git or file data for 'smudge' to working copy
-				process.StandardOutput.BaseStream.Flush();
-				process.StandardOutput.BaseStream.CopyTo(output);
-				output.Flush();
-				output.Close();
-				process.StandardOutput.Close();
-			
-				if (mode == FilterMode.Smudge) process.WaitForExit();
+				if (mode == FilterMode.Clean)
+				{
+					process.WaitForExit();
+
+					// write git-lfs pointer for 'clean' to git or file data for 'smudge' to working copy
+					process.StandardOutput.BaseStream.CopyTo(output);
+					process.StandardOutput.BaseStream.Flush();
+					process.StandardOutput.Close();
+					output.Flush();
+					output.Close();
+				}
+				else if (mode == FilterMode.Smudge)
+				{
+					// write git-lfs pointer for 'clean' to git or file data for 'smudge' to working copy
+					process.StandardOutput.BaseStream.CopyTo(output);
+					process.StandardOutput.BaseStream.Flush();
+					process.StandardOutput.Close();
+					output.Flush();
+					output.Close();
+
+					process.WaitForExit();
+				}
+
 				process.Dispose();
 			}
 			catch (Exception e)
 			{
 				MessageBox.Show(e.Message);
 			}
-        }
+		}
 
         protected override void Create(string path, string root, FilterMode mode)
         {
@@ -81,17 +93,19 @@ namespace GitGameGUI
 				process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
 				process.StartInfo.RedirectStandardInput = true;
 				process.StartInfo.RedirectStandardOutput = true;
+				process.StartInfo.RedirectStandardError = true;
 				process.StartInfo.CreateNoWindow = false;
 				process.StartInfo.UseShellExecute = false;
+
 				process.Start();
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show(e.Message);
+				MessageBox.Show("Create Error: " + e.Message);
 			}
         }
 
-        protected override void Initialize()
+		protected override void Initialize()
         {
             base.Initialize();
         }
@@ -103,11 +117,10 @@ namespace GitGameGUI
 				// write git-lfs pointer to stdin
 				input.CopyTo(process.StandardInput.BaseStream);
 				input.Flush();
-				input.Close();
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show(e.Message);
+				MessageBox.Show("Smudge Error: " + e.Message);
 			}
         }
     }
