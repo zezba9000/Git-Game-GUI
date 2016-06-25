@@ -406,22 +406,29 @@ namespace GitGameGUI
 		{
 			try
 			{
-				//var options = new PushOptions();
-				//options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
-				//RepoUserControl.repo.Network.Push(BranchesUserControl.activeBranch, options);
-
-				// hack to fix git-lfs push being broken
+				// pre push git lfs file data
 				using (var process = new Process())
 				{
-					process.StartInfo.FileName = "git";
-					process.StartInfo.Arguments = "push";
+					process.StartInfo.FileName = "git-lfs";
+					process.StartInfo.Arguments = "pre-push origin " + BranchesUserControl.activeBranch.FriendlyName;
 					process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
 					process.StartInfo.CreateNoWindow = false;
 					process.StartInfo.UseShellExecute = false;
-
+					process.StartInfo.RedirectStandardInput = true;
+					process.StartInfo.RedirectStandardOutput = true;
 					process.Start();
+				
+					process.StandardInput.Write("\0");// needs something/anything written to its stdin (or it wont execute?)
+					process.StandardInput.Flush();
+					process.StandardInput.Close();
 					process.WaitForExit();
+
+					Console.WriteLine(process.StandardOutput.ReadToEnd());
 				}
+				
+				var options = new PushOptions();
+				options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
+				RepoUserControl.repo.Network.Push(BranchesUserControl.activeBranch, options);
 			}
 			catch (Exception ex)
 			{
