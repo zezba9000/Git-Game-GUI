@@ -160,6 +160,9 @@
   <ItemGroup>
     <Resource Include="Icons\typeChanged.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\conflicted.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

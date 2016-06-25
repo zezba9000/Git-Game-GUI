@@ -133,7 +133,7 @@ namespace GitGameGUI
 
 					if ((state & FileStatus.Conflicted) != 0)
 					{
-						unstagedChangesListView.Items.Add(new FileItem("Icons/typeChanged.png", fileStatus.FilePath));
+						unstagedChangesListView.Items.Add(new FileItem("Icons/conflicted.png", fileStatus.FilePath));
 						stateHandled = true;
 					}
 
