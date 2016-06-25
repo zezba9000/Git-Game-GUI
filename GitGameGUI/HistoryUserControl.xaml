@@ -7,7 +7,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
 	<Grid Background="DarkGray">
-		<Button x:Name="openGitkButton" Content="Open Gitk" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" Width="75" Click="openGitkButton_Click"/>
-		<Label x:Name="label" Content="Click the button below to open the default Git GUI tool for history." Margin="10,7,10,0" VerticalAlignment="Top"/>
+		<Button x:Name="openGitkButton" Content="Open History Tool" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="126" Click="openGitkButton_Click"/>
 	</Grid>
 </UserControl>

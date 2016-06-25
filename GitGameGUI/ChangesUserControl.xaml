@@ -13,7 +13,14 @@
 		<DataTemplate x:Key="ListViewTemplate">
 			<StackPanel Orientation="Horizontal">
 				<Image Source="{Binding Path=Icon}" Width="16" Height="16" MouseDown="FileItemImage_MouseDown"/>
-				<TextBlock Text="{Binding Path=Filename}" VerticalAlignment="Center"/>
+				<TextBlock Text="{Binding Path=Filename}" VerticalAlignment="Center" ContextMenuService.ShowOnDisabled="True">
+					<TextBlock.ContextMenu>
+						<ContextMenu>
+							<MenuItem Header="Open file location"/>
+							<MenuItem Header="Open Diff tool"/>
+						</ContextMenu>
+					</TextBlock.ContextMenu>
+				</TextBlock>
 			</StackPanel>
 		</DataTemplate>
 	</UserControl.Resources>
@@ -52,7 +59,8 @@
 			</Grid>
 
 			<Grid Grid.Column="1">
-				<ScrollViewer Margin="10" >
+				<Button x:Name="openDiffToolButton" Content="Open Diff Tool" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="109"/>
+				<ScrollViewer Margin="10,35,10,10" >
 					<TextBox x:Name="diffTextBox" IsReadOnly="True" TextWrapping="NoWrap" Text="" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
 				</ScrollViewer>
 			</Grid>

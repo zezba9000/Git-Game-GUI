@@ -14,15 +14,15 @@
 		</Grid.RowDefinitions>
 
 		<Grid Grid.Row="0">
-			<ComboBox x:Name="activeRepoComboBox" HorizontalAlignment="Left" Margin="119,10,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
+			<ComboBox x:Name="activeRepoComboBox" Margin="119,10,10,0" VerticalAlignment="Top" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
 			<Label x:Name="label" Content="Active Repository:" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
 			<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Left" Margin="119,37,0,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>
-			<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Left" Margin="244,10,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
+			<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Left" Margin="119,62,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
 
-			<Label Content="Clone URL:" HorizontalAlignment="Left" Margin="47,85,0,0" VerticalAlignment="Top"/>
-			<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="119,113,0,0" VerticalAlignment="Top" Width="120" Click="cloneButton_Click"/>
-			<Button x:Name="createButton" Content="Create New" HorizontalAlignment="Left" Margin="119,138,0,0" VerticalAlignment="Top" Width="120" Click="createButton_Click"/>
-			<TextBox x:Name="repoPathTextBox" Height="23" Margin="119,85,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+			<Label Content="Clone URL:" HorizontalAlignment="Left" Margin="47,131,0,0" VerticalAlignment="Top"/>
+			<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="119,159,0,0" VerticalAlignment="Top" Width="120" Click="cloneButton_Click"/>
+			<Button x:Name="createButton" Content="Create New" HorizontalAlignment="Left" Margin="119,184,0,0" VerticalAlignment="Top" Width="120" Click="createButton_Click"/>
+			<TextBox x:Name="repoPathTextBox" Height="23" Margin="119,131,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
 
 			<Label Content=": User Signature Name" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,91" VerticalAlignment="Bottom"/>
 			<Label Content=": User Signature Email" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,63" VerticalAlignment="Bottom"/>
