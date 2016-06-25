@@ -6,8 +6,8 @@
              xmlns:local="clr-namespace:GitGameGUI"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Background="Red">
-		<TreeView x:Name="treeView" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0" Height="127" Width="140"/>
-		<Button x:Name="openGitkButton" Content="Open Gitk" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="75" Click="openGitkButton_Click"/>
+	<Grid Background="DarkGray">
+		<Button x:Name="openGitkButton" Content="Open Gitk" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" Width="75" Click="openGitkButton_Click"/>
+		<Label x:Name="label" Content="Click the button below to open the default Git GUI tool for history." Margin="10,7,10,0" VerticalAlignment="Top"/>
 	</Grid>
 </UserControl>

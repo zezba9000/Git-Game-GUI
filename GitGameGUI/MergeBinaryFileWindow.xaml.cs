@@ -27,14 +27,10 @@ namespace GitGameGUI
 		public MergeBinaryResults result = MergeBinaryResults.Cancel;
 		private bool isClosed;
 		
-		public string fileInConflict
-		{
-			set {fileInConflictTextBox.Text = value;}
-		}
-
-		public MergeBinaryFileWindow()
+		public MergeBinaryFileWindow(string fileInConflict)
 		{
 			InitializeComponent();
+			fileInConflictTextBox.Text = fileInConflict;
 		}
 
 		protected override void OnClosed(EventArgs e)

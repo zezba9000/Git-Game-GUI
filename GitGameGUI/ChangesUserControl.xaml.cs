@@ -336,9 +336,10 @@ namespace GitGameGUI
 
 		private void revertAllButton_Click(object sender, RoutedEventArgs e)
 		{
+			if (MessageBox.Show("Are you sure you want to revert all local changes?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+
 			try
 			{
-				// TODO add yes no to continue
 				RepoUserControl.repo.Reset(ResetMode.Hard);
 			}
 			catch (Exception ex)
@@ -383,23 +384,20 @@ namespace GitGameGUI
 
 		private void commitStagedButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (string.IsNullOrEmpty(commitMessageTextBox.Text))
+			if (stagedChangesListView.Items.Count == 0)
 			{
-				MessageBox.Show("Must enter a commit message");
+				MessageBox.Show("Nothing to commit!");
 				return;
 			}
 
-			try
-			{
-				RepoUserControl.repo.Commit(commitMessageTextBox.Text, RepoUserControl.signature, RepoUserControl.signature);
-				commitMessageTextBox.Text = "";
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Failed to commit: " + ex.Message);
-			}
+			var commitWindow = new CommitWindow(sender == commitPullPushButton ? CommitWindowTypes.CommitPullPush : CommitWindowTypes.CommitOnly);
+			commitWindow.Owner = MainWindow.singleton;
+			commitWindow.Show();
+		}
 
-			MainWindow.UpdateUI();
+		public static void Push()
+		{
+			singleton.pushChangesButton_Click(null, null);
 		}
 
 		private void pushChangesButton_Click(object sender, RoutedEventArgs e)
@@ -412,7 +410,7 @@ namespace GitGameGUI
 					process.StartInfo.FileName = "git-lfs";
 					process.StartInfo.Arguments = "pre-push origin " + BranchesUserControl.activeBranch.FriendlyName;
 					process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
-					process.StartInfo.CreateNoWindow = false;
+					process.StartInfo.CreateNoWindow = true;
 					process.StartInfo.UseShellExecute = false;
 					process.StartInfo.RedirectStandardInput = true;
 					process.StartInfo.RedirectStandardOutput = true;
@@ -434,6 +432,11 @@ namespace GitGameGUI
 			{
 				MessageBox.Show("Failed to push: " + ex.Message);
 			}
+		}
+
+		public static void Pull()
+		{
+			singleton.pullChangesButton_Click(null, null);
 		}
 
 		private void pullChangesButton_Click(object sender, RoutedEventArgs e)
@@ -477,9 +480,8 @@ namespace GitGameGUI
 			{
 				// open merge tool
 				MainWindow.CanInteractWithUI(false);
-				var mergeBinaryFileWindow = new MergeBinaryFileWindow();
+				var mergeBinaryFileWindow = new MergeBinaryFileWindow(item.filename);
 				mergeBinaryFileWindow.Owner = MainWindow.singleton;
-				mergeBinaryFileWindow.fileInConflict = item.filename;
 				mergeBinaryFileWindow.Show();
 				await mergeBinaryFileWindow.WaitForClose();
 				MainWindow.CanInteractWithUI(true);

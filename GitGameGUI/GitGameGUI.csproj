@@ -70,6 +70,9 @@
     <Compile Include="ChangesUserControl.xaml.cs">
       <DependentUpon>ChangesUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CommitWindow.xaml.cs">
+      <DependentUpon>CommitWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HistoryUserControl.xaml.cs">
       <DependentUpon>HistoryUserControl.xaml</DependentUpon>
     </Compile>
@@ -86,6 +89,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ChangesUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CommitWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

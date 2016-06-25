@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:GitGameGUI"
 			 xmlns:self="clr-namespace:GitGameGUI"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="500">
+             d:DesignHeight="800" d:DesignWidth="1280">
 
 	<UserControl.Resources>
 		<self:FileItem x:Key="FileItem"/>
@@ -18,21 +18,60 @@
 		</DataTemplate>
 	</UserControl.Resources>
 
-	<Grid>
-		<Button x:Name="refreshChangedButton" Content="Refresh" HorizontalAlignment="Left" Margin="234,241,0,0" VerticalAlignment="Top" Width="75" Click="refreshChangedButton_Click"/>
-		<Button x:Name="commitStagedButton" Content="Commit" HorizontalAlignment="Left" Margin="326,241,0,0" VerticalAlignment="Top" Width="75" Click="commitStagedButton_Click"/>
-		<Button x:Name="pushChangesButton" Content="Push" HorizontalAlignment="Left" Margin="406,241,0,0" VerticalAlignment="Top" Width="75" Click="pushChangesButton_Click"/>
-		<Button x:Name="pullChangesButton" Content="Pull" HorizontalAlignment="Left" Margin="406,266,0,0" VerticalAlignment="Top" Width="75" Click="pullChangesButton_Click"/>
-		<Button x:Name="revertAllButton" Content="Revert All" HorizontalAlignment="Left" Margin="234,35,0,0" VerticalAlignment="Top" Width="75" Click="revertAllButton_Click"/>
-		<Button x:Name="stageAllButton" Content="Stage All" HorizontalAlignment="Left" Margin="234,10,0,0" VerticalAlignment="Top" Width="75" Click="stageAllButton_Click"/>
-		<Button x:Name="unstageAllButton" Content="Unstage All" HorizontalAlignment="Left" Margin="234,129,0,0" VerticalAlignment="Top" Width="75" Click="unstageAllButton_Click"/>
-		<Button x:Name="resolveSelectedButton" Content="Resolve Sel" HorizontalAlignment="Left" Margin="10,241,0,0" VerticalAlignment="Top" Width="75" Click="resolveSelectedButton_Click"/>
-		<Button x:Name="resolveAllButton" Content="Resolve All" HorizontalAlignment="Left" Margin="90,241,0,0" VerticalAlignment="Top" Width="75" Click="resolveAllButton_Click"/>
-		<TextBox x:Name="diffTextBox" HorizontalAlignment="Left" Margin="326,10,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Height="226" Width="155"/>
-		<TextBox x:Name="commitMessageTextBox" Height="23" TextWrapping="Wrap" Text="Commit message..." Margin="10,266,99,10"/>
-		<StackPanel MouseDown="StackPanel_MouseDown">
-			<ListView Name="unstagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" HorizontalAlignment="Left" Height="107" Margin="10,10,0,0" VerticalAlignment="Top" Width="219" SelectionChanged="unstagedChangesListView_SelectionChanged"/>
-			<ListView Name="stagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" HorizontalAlignment="Left" Height="107" Margin="10,10,0,0" VerticalAlignment="Top" Width="219" SelectionChanged="stagedChangesListView_SelectionChanged"/>
-		</StackPanel>
+	<Grid Background="DarkGray">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="85*" />
+			<RowDefinition Height="15*" />
+		</Grid.RowDefinitions>
+
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="50*" />
+				<ColumnDefinition Width="50*" />
+			</Grid.ColumnDefinitions>
+
+			<Grid Grid.Column="0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="50*" />
+					<RowDefinition Height="50*" />
+				</Grid.RowDefinitions>
+
+				<Grid Grid.Row="0">
+					<Button x:Name="refreshChangedButton" Content="Refresh" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" Width="75" Click="refreshChangedButton_Click"/>
+					<Button x:Name="revertAllButton" Content="Revert All" HorizontalAlignment="Left" Margin="90,10,0,0" VerticalAlignment="Top" Width="75" Click="revertAllButton_Click"/>
+					<Button x:Name="stageAllButton" Content="Stage All" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="stageAllButton_Click"/>
+					<Button x:Name="resolveSelectedButton" Content="Resolve Sel" HorizontalAlignment="Right" Margin="0,10,90,0" VerticalAlignment="Top" Width="75" Click="resolveSelectedButton_Click"/>
+					<Button x:Name="resolveAllButton" Content="Resolve All" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="75" Click="resolveAllButton_Click"/>
+					<ListView Name="unstagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" Margin="10,35,10,10" SelectionChanged="unstagedChangesListView_SelectionChanged"/>
+				</Grid>
+
+				<Grid Grid.Row="1">
+					<Button x:Name="unstageAllButton" Content="Unstage All" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="unstageAllButton_Click"/>
+					<ListView Name="stagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" Margin="10,35,10,10" SelectionChanged="stagedChangesListView_SelectionChanged"/>
+				</Grid>
+			</Grid>
+
+			<Grid Grid.Column="1">
+				<ScrollViewer Margin="10" >
+					<TextBox x:Name="diffTextBox" IsReadOnly="True" TextWrapping="NoWrap" Text="" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+				</ScrollViewer>
+			</Grid>
+		</Grid>
+
+		<TabControl x:Name="tabControl" Margin="10" Grid.Row="1">
+			<TabItem Header="Simple">
+				<Grid Background="#FFE5E5E5">
+					<Button x:Name="pullChangesButton" FontSize="18" Content="Pull" Margin="0,10,10,10" Click="pullChangesButton_Click" HorizontalAlignment="Right" Width="256"/>
+					<Button x:Name="commitPullPushButton" FontSize="18" Content="Commit>Pull>Push" Margin="10,10,0,10" Click="commitStagedButton_Click" HorizontalAlignment="Left" Width="256"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="Advanced">
+				<Grid Background="#FFE5E5E5">
+					<Button x:Name="pullChangesButton2" FontSize="18" Content="Pull" Margin="0,10,0,10" Click="pullChangesButton_Click" HorizontalAlignment="Center" Width="256"/>
+					<Button x:Name="commitStagedButton" FontSize="18" Content="Commit" Margin="10,10,0,10" Click="commitStagedButton_Click" HorizontalAlignment="Left" Width="256"/>
+					<Button x:Name="pushChangesButton" FontSize="18" Content="Push" Margin="0,10,10,10" Click="pushChangesButton_Click" HorizontalAlignment="Right" Width="256"/>
+				</Grid>
+			</TabItem>
+		</TabControl>
 	</Grid>
 </UserControl>

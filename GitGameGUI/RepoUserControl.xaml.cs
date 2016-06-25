@@ -94,7 +94,7 @@ namespace GitGameGUI
 				process.StartInfo.RedirectStandardInput = true;
 				process.StartInfo.RedirectStandardOutput = true;
 				process.StartInfo.RedirectStandardError = true;
-				process.StartInfo.CreateNoWindow = false;
+				process.StartInfo.CreateNoWindow = true;
 				process.StartInfo.UseShellExecute = false;
 
 				process.Start();
@@ -230,7 +230,7 @@ namespace GitGameGUI
 					singleton.sigNameTextBox.Text = repoSettings.signatureName;
 					singleton.sigEmailTextBox.Text = repoSettings.signatureEmail;
 					singleton.usernameTextBox.Text = repoSettings.username;
-					singleton.passTextBox.Text = repoSettings.password;
+					singleton.passTextBox.Password = repoSettings.password;
 
 					// create signature
 					signature = new Signature(repoSettings.signatureName, repoSettings.signatureEmail, DateTimeOffset.UtcNow);
@@ -241,6 +241,12 @@ namespace GitGameGUI
 						Username = repoSettings.username,
 						Password = repoSettings.password
 					};
+
+					// trim repository list
+					if (MainWindow.appSettings.repositories.Count > 10)
+					{
+						MainWindow.appSettings.repositories.RemoveAt(MainWindow.appSettings.repositories.Count - 1);
+					}
 
 					// add to settings
 					bool exists = false;
@@ -447,10 +453,10 @@ namespace GitGameGUI
 			if (credentials != null) credentials.Username = usernameTextBox.Text;
 		}
 
-		private void passTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		private void passTextBox_PasswordChanged(object sender, RoutedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.password = passTextBox.Text;
-			if (credentials != null) credentials.Password = passTextBox.Text;
+			if (repoSettings != null) repoSettings.password = passTextBox.Password;
+			if (credentials != null) credentials.Password = passTextBox.Password;
 		}
 
 		private void addGitLFSExtButton_Click(object sender, RoutedEventArgs e)

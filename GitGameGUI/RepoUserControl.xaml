@@ -5,33 +5,54 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GitGameGUI"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="500">
+             d:DesignHeight="600" d:DesignWidth="800">
+
 	<Grid Background="DarkGray">
-		<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="135,10,0,0" VerticalAlignment="Top" Width="75" Click="cloneButton_Click"/>
-		<Button x:Name="createButton" Content="Create" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" Width="75" Click="createButton_Click"/>
-		<TextBox x:Name="repoPathTextBox" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
-		<CheckBox x:Name="gitLFSSupportCheckBox" Content="Validate LFS Support" HorizontalAlignment="Left" Margin="10,76,0,0" VerticalAlignment="Top" Checked="gitLFSSupportCheckBox_Checked" Unchecked="gitLFSSupportCheckBox_Checked"/>
-		<CheckBox x:Name="gitignoreExistsCheckBox" Content="Validate .gitignore file exists" HorizontalAlignment="Left" Margin="10,96,0,0" VerticalAlignment="Top" Checked="gitignoreExistsCheckBox_Checked" Unchecked="gitignoreExistsCheckBox_Checked"/>
-		<CheckBox x:Name="autoCommitMergeCheckBox" Content="Auto Commit Successful Merge" HorizontalAlignment="Left" Margin="10,116,0,0" VerticalAlignment="Top" Checked="autoCommitMergeCheckBox_Checked" Unchecked="autoCommitMergeCheckBox_Checked"/>
-		<CheckBox x:Name="autoPushRemoteMergeCheckBox" Content="Auto Push Successful Remote Merge" HorizontalAlignment="Left" Margin="10,136,0,0" VerticalAlignment="Top" Checked="autoPushRemoteMergeCheckBox_Checked" Unchecked="autoPushRemoteMergeCheckBox_Checked"/>
-		<ComboBox x:Name="activeRepoComboBox" HorizontalAlignment="Left" Margin="361,41,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
-		<Label x:Name="label" Content="Active Repository" HorizontalAlignment="Left" Margin="361,10,0,0" VerticalAlignment="Top"/>
-		<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Left" Margin="361,68,0,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>
-		<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Left" Margin="361,93,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
-		<TextBox x:Name="sigNameTextBox" HorizontalAlignment="Left" Height="23" Margin="10,156,0,0" TextWrapping="Wrap" Text="sig name" VerticalAlignment="Top" Width="186" TextChanged="sigNameTextBox_TextChanged"/>
-		<TextBox x:Name="sigEmailTextBox" HorizontalAlignment="Left" Height="23" Margin="10,184,0,0" TextWrapping="Wrap" Text="sig email" VerticalAlignment="Top" Width="186" TextChanged="sigEmailTextBox_TextChanged"/>
-		<TextBox x:Name="usernameTextBox" HorizontalAlignment="Left" Height="23" Margin="10,212,0,0" TextWrapping="Wrap" Text="username" VerticalAlignment="Top" Width="186" TextChanged="usernameTextBox_TextChanged"/>
-		<TextBox x:Name="passTextBox" HorizontalAlignment="Left" Height="23" Margin="10,240,0,0" TextWrapping="Wrap" Text="pass" VerticalAlignment="Top" Width="186" TextChanged="passTextBox_TextChanged"/>
-		<ComboBox x:Name="mergeDiffToolComboBox" HorizontalAlignment="Left" Margin="370,185,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="mergeDiffToolComboBox_SelectionChanged">
-			<ComboBoxItem>Meld</ComboBoxItem>
-			<ComboBoxItem>kDiff3</ComboBoxItem>
-			<ComboBoxItem>P4Merge</ComboBoxItem>
-			<ComboBoxItem>DiffMerge</ComboBoxItem>
-		</ComboBox>
-		<Label Content="Merge Diff Tool" HorizontalAlignment="Left" Margin="370,156,0,0" VerticalAlignment="Top" Width="120"/>
-		<Button x:Name="addGitLFSExtButton" Content="Add Ext" HorizontalAlignment="Left" Margin="245,240,0,0" VerticalAlignment="Top" Width="120" Click="addGitLFSExtButton_Click"/>
-		<Button x:Name="addGitLFSButton" Content="Add Git-LFS" HorizontalAlignment="Left" Margin="370,215,0,0" VerticalAlignment="Top" Width="120" Click="addGitLFSButton_Click"/>
-		<Button x:Name="removeGitLFSButton" Content="Remove Git-LFS" HorizontalAlignment="Left" Margin="370,240,0,0" VerticalAlignment="Top" Width="120" Click="removeGitLFSButton_Click"/>
-		<TextBox x:Name="gitLFSExtTextBox" HorizontalAlignment="Left" Height="23" Margin="245,212,0,0" TextWrapping="Wrap" Text=".ext" VerticalAlignment="Top" Width="120"/>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="75*" />
+			<RowDefinition Height="25*" />
+		</Grid.RowDefinitions>
+
+		<Grid Grid.Row="0">
+			<ComboBox x:Name="activeRepoComboBox" HorizontalAlignment="Left" Margin="119,10,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
+			<Label x:Name="label" Content="Active Repository:" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+			<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Left" Margin="119,37,0,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>
+			<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Left" Margin="244,10,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
+
+			<Label Content="Clone URL:" HorizontalAlignment="Left" Margin="47,85,0,0" VerticalAlignment="Top"/>
+			<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="119,113,0,0" VerticalAlignment="Top" Width="120" Click="cloneButton_Click"/>
+			<Button x:Name="createButton" Content="Create New" HorizontalAlignment="Left" Margin="119,138,0,0" VerticalAlignment="Top" Width="120" Click="createButton_Click"/>
+			<TextBox x:Name="repoPathTextBox" Height="23" Margin="119,85,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+
+			<Label Content=": User Signature Name" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,91" VerticalAlignment="Bottom"/>
+			<Label Content=": User Signature Email" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,63" VerticalAlignment="Bottom"/>
+			<Label Content=": User Repository Username" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,35" VerticalAlignment="Bottom"/>
+			<Label Content=": User Repository Password" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,7" VerticalAlignment="Bottom"/>
+			<TextBox x:Name="sigNameTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,94" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="sigNameTextBox_TextChanged"/>
+			<TextBox x:Name="sigEmailTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,66" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="sigEmailTextBox_TextChanged"/>
+			<TextBox x:Name="usernameTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,38" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="usernameTextBox_TextChanged"/>
+			<PasswordBox x:Name="passTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,10" Password="" VerticalAlignment="Bottom" Width="229" PasswordChanged="passTextBox_PasswordChanged"/>
+		</Grid>
+
+		<Grid Grid.Row="1">
+			<CheckBox x:Name="gitLFSSupportCheckBox" Content="Validate LFS Support" HorizontalAlignment="Left" Margin="10,0,0,123" VerticalAlignment="Bottom" Checked="gitLFSSupportCheckBox_Checked" Unchecked="gitLFSSupportCheckBox_Checked"/>
+			<CheckBox x:Name="gitignoreExistsCheckBox" Content="Validate .gitignore file exists" HorizontalAlignment="Left" Margin="10,0,0,103" VerticalAlignment="Bottom" Checked="gitignoreExistsCheckBox_Checked" Unchecked="gitignoreExistsCheckBox_Checked"/>
+			<CheckBox x:Name="autoCommitMergeCheckBox" Content="Auto Commit Successful Merge" HorizontalAlignment="Left" Margin="10,0,0,83" VerticalAlignment="Bottom" Checked="autoCommitMergeCheckBox_Checked" Unchecked="autoCommitMergeCheckBox_Checked"/>
+			<CheckBox x:Name="autoPushRemoteMergeCheckBox" Content="Auto Push Successful Remote Merge" HorizontalAlignment="Left" Margin="10,0,0,63" VerticalAlignment="Bottom" Checked="autoPushRemoteMergeCheckBox_Checked" Unchecked="autoPushRemoteMergeCheckBox_Checked"/>
+
+
+			<Button x:Name="addGitLFSExtButton" Content="Add Git-LFS Ext to active repo" HorizontalAlignment="Left" Margin="229,0,0,10" VerticalAlignment="Bottom" Width="214" Click="addGitLFSExtButton_Click"/>
+			<Button x:Name="addGitLFSButton" Content="Add Git-LFS in active repo" HorizontalAlignment="Left" Margin="10,0,0,32" VerticalAlignment="Bottom" Width="214" Click="addGitLFSButton_Click"/>
+			<Button x:Name="removeGitLFSButton" Content="Remove Git-LFS in active repo" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="214" Click="removeGitLFSButton_Click"/>
+			<TextBox x:Name="gitLFSExtTextBox" HorizontalAlignment="Left" Height="23" Margin="229,0,0,32" TextWrapping="Wrap" Text=".ext" VerticalAlignment="Bottom" Width="214"/>
+
+			<Label Content="Merge Diff Tool" HorizontalContentAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,40" VerticalAlignment="Bottom" Width="120"/>
+			<ComboBox x:Name="mergeDiffToolComboBox" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="120" SelectionChanged="mergeDiffToolComboBox_SelectionChanged">
+				<ComboBoxItem>Meld</ComboBoxItem>
+				<ComboBoxItem>kDiff3</ComboBoxItem>
+				<ComboBoxItem>P4Merge</ComboBoxItem>
+				<ComboBoxItem>DiffMerge</ComboBoxItem>
+			</ComboBox>
+		</Grid>
 	</Grid>
 </UserControl>

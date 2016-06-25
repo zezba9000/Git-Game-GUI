@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:GitGameGUI"
 		xmlns:self="clr-namespace:GitGameGUI"
         mc:Ignorable="d"
-        Title="Git-Game-GUI" Height="398" Width="525" WindowStartupLocation="CenterScreen">
+        Title="Git-Game-GUI" Height="800" Width="1280" WindowStartupLocation="CenterScreen">
 
 	<Grid>
-		<TabControl x:Name="tabControl" HorizontalAlignment="Left" Height="347" Margin="10,10,0,0" VerticalAlignment="Top" Width="497">
+		<TabControl x:Name="tabControl" Margin="0">
 			<TabItem Header="Changes">
 				<self:ChangesUserControl/>
 			</TabItem>

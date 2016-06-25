@@ -57,10 +57,10 @@ namespace GitGameGUI
 				MessageBox.Show("Refresh Branches Error: " + e.Message);
 			}
 			
-			workingBranchComboBox_SelectionChanged(null, null);
+			activeBranchComboBox_SelectionChanged(null, null);
 		}
 
-		private void workingBranchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void activeBranchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (MainWindow.uiUpdating) return;
 
@@ -92,8 +92,7 @@ namespace GitGameGUI
 			try
 			{
 				var srcBround = RepoUserControl.repo.Branches[otherBranchComboBox.SelectedValue as string];
-				var sig = new Signature("Andrew Witte", "zezba9000@gmail.com", DateTimeOffset.UtcNow);
-				RepoUserControl.repo.Merge(srcBround, sig);
+				RepoUserControl.repo.Merge(srcBround, RepoUserControl.signature);
 			}
 			catch (Exception ex)
 			{
@@ -105,22 +104,30 @@ namespace GitGameGUI
 
 		private void addNewBranchButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (string.IsNullOrEmpty(newBranchTextBox.Text))
+			if (string.IsNullOrEmpty(branchNameTextBox.Text))
 			{
 				MessageBox.Show("Must give the branch a name");
 				return;
 			}
 
+			if (!Tools.IsSingleWord(branchNameTextBox.Text))
+			{
+				MessageBox.Show("No white space or special characters allowed");
+				return;
+			}
+
 			try
 			{
-				RepoUserControl.repo.CreateBranch(newBranchTextBox.Text);
+				RepoUserControl.repo.CreateBranch(branchNameTextBox.Text);
+				activeBranchComboBox.Items.Add(branchNameTextBox.Text);
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+				return;
 			}
 
-			MainWindow.UpdateUI();
+			if (activeBranchComboBox.Items.Count != 0) activeBranchComboBox.SelectedIndex = activeBranchComboBox.Items.Count - 1;
 		}
 
 		private void deleteBranchButton_Click(object sender, RoutedEventArgs e)
@@ -145,7 +152,7 @@ namespace GitGameGUI
 
 		private void renameBranchButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (string.IsNullOrEmpty(newBranchTextBox.Text))
+			if (string.IsNullOrEmpty(branchNameTextBox.Text))
 			{
 				MessageBox.Show("Must give the branch a name");
 				return;
@@ -153,7 +160,7 @@ namespace GitGameGUI
 
 			try
 			{
-				RepoUserControl.repo.Branches.Rename(activeBranchComboBox.Text, newBranchTextBox.Text);
+				RepoUserControl.repo.Branches.Rename(activeBranchComboBox.Text, branchNameTextBox.Text);
 			}
 			catch (Exception ex)
 			{

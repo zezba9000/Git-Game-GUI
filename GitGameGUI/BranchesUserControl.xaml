@@ -4,17 +4,17 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GitGameGUI"
-             mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="500">
-	<Grid Background="DarkGray">
-		<ComboBox x:Name="activeBranchComboBox" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="workingBranchComboBox_SelectionChanged"/>
-		<ComboBox x:Name="otherBranchComboBox" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="120"/>
-		<Button x:Name="mergeButton" Content="Merge Source into Active" HorizontalAlignment="Center" Margin="168,44,154,0" VerticalAlignment="Top" Width="169" Click="mergeButton_Click"/>
-		<Label Content="Active Local Branch" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-		<Label Content="Other Branch" HorizontalAlignment="Right" Margin="0,13,50,0" VerticalAlignment="Top"/>
-		<TextBox x:Name="newBranchTextBox" HorizontalAlignment="Left" Height="23" Margin="10,109,0,0" TextWrapping="Wrap" Text="New Branch Name" VerticalAlignment="Top" Width="120"/>
-		<Button x:Name="addNewBranchButton" Content="Add New Branch" HorizontalAlignment="Left" Margin="10,137,0,0" VerticalAlignment="Top" Width="120" Click="addNewBranchButton_Click"/>
-		<Button x:Name="deleteBranchButton" Content="Delete Branch" HorizontalAlignment="Left" Margin="370,71,0,0" VerticalAlignment="Top" Width="120" Click="deleteBranchButton_Click"/>
-		<Button x:Name="renameBranchButton" Content="Rename Active Branch" HorizontalAlignment="Left" Margin="135,109,0,0" VerticalAlignment="Top" Width="156" Click="renameBranchButton_Click"/>
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="600">
+	<Grid>
+		<ComboBox x:Name="activeBranchComboBox" HorizontalAlignment="Left" Margin="137,10,0,0" VerticalAlignment="Top" Width="155" SelectionChanged="activeBranchComboBox_SelectionChanged"/>
+		<ComboBox x:Name="otherBranchComboBox" HorizontalAlignment="Left" Margin="137,40,0,0" VerticalAlignment="Top" Width="155"/>
+		<Button x:Name="mergeButton" Content="Merge Other into Active" Margin="297,10,0,0" VerticalAlignment="Top" Click="mergeButton_Click" HorizontalAlignment="Left" Width="197" Height="52"/>
+		<Label Content="Active Branch:" HorizontalContentAlignment="Right" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="122"/>
+		<Label Content="Other Branch:" HorizontalContentAlignment="Right" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="122"/>
+		<Label Content="Branch Name:" HorizontalContentAlignment="Right" HorizontalAlignment="Left" Margin="10,118,0,0" VerticalAlignment="Top" Width="122"/>
+		<TextBox x:Name="branchNameTextBox" HorizontalAlignment="Left" Height="23" Margin="137,118,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="155"/>
+		<Button x:Name="addNewBranchButton" Content="Add New Branch" HorizontalAlignment="Left" Margin="137,146,0,0" VerticalAlignment="Top" Width="155" Click="addNewBranchButton_Click"/>
+		<Button x:Name="deleteBranchButton" Content="Delete Other Branch" HorizontalAlignment="Left" Margin="137,67,0,0" VerticalAlignment="Top" Width="155" Click="deleteBranchButton_Click"/>
+		<Button x:Name="renameBranchButton" Content="Rename Active Branch" HorizontalAlignment="Left" Margin="137,171,0,0" VerticalAlignment="Top" Width="155" Click="renameBranchButton_Click"/>
 	</Grid>
 </UserControl>
