@@ -43,7 +43,7 @@ namespace GitGameGUI
 					".mpeg", ".mov", ".avi", ".mp4", ".wmv",// video types
 					".wav", ".mp3", ".ogg", ".wma", ".acc",// audeo types
 					".zip", ".7z", ".rar", ".tar", ".gz",// compression types
-					".bin", ".data", ".raw",// unknown binary types
+					".bin", ".data", ".raw", ".hex",// unknown binary types
 				});
 			}
 			

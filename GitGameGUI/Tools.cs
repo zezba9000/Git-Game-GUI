@@ -16,12 +16,48 @@ namespace GitGameGUI
 			programFilesx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).Replace(" (x86)", "");
 		}
 
+		public static bool IsTextFileType(string filename)
+		{
+			string ext = System.IO.Path.GetExtension(filename);
+			switch (ext)
+			{
+				// word docs
+				case ".txt":
+				case ".rtf":
+				case ".doc":
+				case ".docx":
+
+				// code docs
+				case ".cs":
+				case ".cpp":
+				case ".c":
+				case ".hpp":
+				case ".h":
+				case ".js":
+
+				// mark up docs
+				case ".xml":
+				case ".html":
+				case ".htm":
+				case ".css":
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool IsBinaryFileType(string filename)
 		{
 			string ext = System.IO.Path.GetExtension(filename);
 			switch (ext)
 			{
 				case ".zip":
+				case ".7z":
+				case ".rar":
+				case ".bin":
+				case ".hex":
+				case ".raw":
+				case ".data":
 					return true;
 			}
 

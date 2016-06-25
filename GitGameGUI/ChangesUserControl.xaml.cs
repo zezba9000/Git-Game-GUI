@@ -189,73 +189,92 @@ namespace GitGameGUI
 		}
 
 		private void RefreshDiffText(ListView listView)
-		{return;
+		{
 			foreach (var item in RepoUserControl.repo.RetrieveStatus())
 			{
 				if (item.FilePath != ((FileItem)listView.SelectedValue).filename) continue;
+				var state = item.State;
 
 				// check if file still exists
-				if (!File.Exists(RepoUserControl.repoPath + "\\" + item.FilePath))
+				string fullPath = RepoUserControl.repoPath + "\\" + item.FilePath;
+				if (!File.Exists(fullPath))
 				{
 					diffTextBox.Text = "<< File Doesn't Exist >>";
-					continue;
+					return;
+				}
+
+				// if new file just grab local data
+				if ((state & FileStatus.NewInWorkdir) != 0 || (state & FileStatus.NewInIndex) != 0)
+				{
+					if (Tools.IsTextFileType(item.FilePath))
+					{
+						using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.None))
+						using (var reader = new StreamReader(stream))
+						{
+							diffTextBox.Text = reader.ReadToEnd();
+						}
+					}
+
+					return;
 				}
 
 				// check if binary file
-				//var file = RepoUserControl.repo.Index[item.FilePath];
 				var file = RepoUserControl.repo.Index[item.FilePath];
 				var fileID = file.Id;
-				var blob = RepoUserControl.repo.Lookup<Blob>(fileID);//.ObjectDatabase.CreateBlob(item.FilePath);
+				var blob = RepoUserControl.repo.Lookup<Blob>(fileID);
 				if (blob.IsBinary || Tools.IsBinaryFileType(item.FilePath))
 				{
 					diffTextBox.Text = "<< Binary File >>";
-					continue;
+					return;
 				}
 
 				// check for text types
-				var state = item.State;
 				if ((state & FileStatus.ModifiedInWorkdir) != 0)
 				{
 					var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>(){item.FilePath});
-					var match = Regex.Match(patch.Content, @"@@\s-\d*\s\+\d*\s@@\n(.*)", RegexOptions.Singleline);
+					var match = Regex.Match(patch.Content, @"@@.*@@\n(.*)", RegexOptions.Singleline);
 					if (match.Success && match.Groups.Count == 2) diffTextBox.Text = match.Groups[1].Value.Replace("\\ No newline at end of file\n", "");
 					else diffTextBox.Text = patch.Content;
+					return;
 				}
 				else if ((state & FileStatus.ModifiedInIndex) != 0)
 				{
 					diffTextBox.Text = blob.GetContentText();
-				}
-				else if ((state & FileStatus.NewInWorkdir) != 0 || (state & FileStatus.NewInIndex) != 0)
-				{
-					diffTextBox.Text = blob.GetContentText();
+					return;
 				}
 				else if ((state & FileStatus.DeletedFromWorkdir) != 0 || (state & FileStatus.DeletedFromIndex) != 0)
 				{
 					diffTextBox.Text = blob.GetContentText();
+					return;
 				}
 				else if ((state & FileStatus.RenamedInWorkdir) != 0 || (state & FileStatus.RenamedInIndex) != 0)
 				{
 					diffTextBox.Text = blob.GetContentText();
+					return;
 				}
 				else if ((state & FileStatus.TypeChangeInWorkdir) != 0 || (state & FileStatus.TypeChangeInIndex) != 0)
 				{
 					diffTextBox.Text = blob.GetContentText();
+					return;
 				}
 				else if ((state& FileStatus.Conflicted) != 0)
 				{
 					diffTextBox.Text = blob.GetContentText();
+					return;
 				}
 				else if ((state & FileStatus.Ignored) != 0)
 				{
-					// do nothing...
+					return;
 				}
 				else if ((state & FileStatus.Unreadable) != 0)
 				{
 					MessageBox.Show("Something is wrong. The file is not readable!");
+					return;
 				}
 				else
 				{
 					MessageBox.Show("Unsuported FileStatus: " + state);
+					return;
 				}
 			}
 		}
