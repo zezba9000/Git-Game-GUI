@@ -19,31 +19,40 @@ namespace GitGameGUI
 			programFilesx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).Replace(" (x86)", "");
 		}
 
-		public static bool IsBinaryFileData(string filename)
+		public static bool IsBinaryFileData(Stream stream, bool disposeStream = false)
 		{
 			const int maxByteRead = 1024 * 1024 * 2;
-			using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.None))
+
+			// if the file is to large consider a data file (2mb)
+			if (stream.Length > maxByteRead)
 			{
-				// if the file is to large consider a data file (2mb)
-				if (stream.Length > maxByteRead)
+				if (disposeStream) stream.Dispose();
+				return true;
+			}
+
+			// check for \0 characters and if they accure before the end of file, this is a data file
+			int b = stream.ReadByte();
+			while (b != -1)
+			{
+				if (b == 0 && stream.Position < maxByteRead)
 				{
+					if (disposeStream) stream.Dispose();
 					return true;
 				}
 
-				// check for \0 characters and if they accure before the end of file, this is a data file
-				int b = stream.ReadByte();
-				while (b != -1)
-				{
-					if (b == 0 && stream.Position < maxByteRead)
-					{
-						return true;
-					}
-
-					b = stream.ReadByte();
-				}
+				b = stream.ReadByte();
 			}
 
+			if (disposeStream) stream.Dispose();
 			return false;
+		}
+
+		public static bool IsBinaryFileData(string filename)
+		{
+			using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.None))
+			{
+				return IsBinaryFileData(stream);
+			}
 		}
 
 		public static bool IsGitLFSPtr(string data)

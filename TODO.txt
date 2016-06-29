@@ -1,0 +1,10 @@
+Binary Merge tool show show image diff (so you know what you want to select)
+Show binary images in quick preview.
+
+Implement repo validation options
+
+Check if repo has branches, if not ask to add one or disable features.
+Make sure add git-lfs repo options error out on blank repos.
+
+More UI clean up.
+Test and test

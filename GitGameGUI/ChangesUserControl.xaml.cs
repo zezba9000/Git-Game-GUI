@@ -482,11 +482,12 @@ namespace GitGameGUI
 			var ours = RepoUserControl.repo.Lookup<Blob>(conflict.Ours.Id);
 			var theirs = RepoUserControl.repo.Lookup<Blob>(conflict.Theirs.Id);
 
-			// TODO: copy both ours and theirs, then make binary merge tool visualize image diff
-			//Tools.SaveFileFromID(string.Format("{0}\\{1}.orig", RepoUserControl.repoPath, item.filename), changed.Target.Id);
+			// save local temp files
+			Tools.SaveFileFromID(fullPath + ".ours", ours.Id);
+			Tools.SaveFileFromID(fullPath + ".theirs", ours.Id);
 
-			// check if files are binary (if so open select source tool)
-			if (ours.IsBinary || theirs.IsBinary)
+			// check if files are binary (if so open select binary file tool)
+			if (ours.IsBinary || theirs.IsBinary || Tools.IsBinaryFileData(fullPath + ".ours") || Tools.IsBinaryFileData(fullPath + ".theirs"))
 			{
 				// open merge tool
 				MainWindow.CanInteractWithUI(false);
@@ -497,17 +498,17 @@ namespace GitGameGUI
 				MainWindow.CanInteractWithUI(true);
 				if (mergeBinaryFileWindow.result == MergeBinaryResults.Cancel) return false;
 
-				// check if we want theirs and copy
-				if (mergeBinaryFileWindow.result == MergeBinaryResults.UserTheirs)
-				{
-					using (var theirStream = theirs.GetContentStream())
-					using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None))
-					{
-						theirStream.CopyTo(stream);
-					}
-				}
+				// copy selected
+				if (mergeBinaryFileWindow.result == MergeBinaryResults.KeepMine) File.Copy(fullPath + ".ours", fullPath, true);
+				else if (mergeBinaryFileWindow.result == MergeBinaryResults.UserTheirs) File.Copy(fullPath + ".theirs", fullPath, true);
 
 				RepoUserControl.repo.Stage(item.filename);
+
+				// delete temp files
+				if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
+				if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
+				if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
+
 				return true;
 			}
 			
@@ -529,20 +530,6 @@ namespace GitGameGUI
 				{
 					baseHash = md5.ComputeHash(stream);
 				}
-			}
-
-			// copy ours
-			using (var oursStream = ours.GetContentStream())
-			using (var stream = new FileStream(fullPath + ".ours", FileMode.Create, FileAccess.Write, FileShare.None))
-			{
-				oursStream.CopyTo(stream);
-			}
-
-			// copy thiers
-			using (var theirStream = theirs.GetContentStream())
-			using (var stream = new FileStream(fullPath + ".thiers", FileMode.Create, FileAccess.Write, FileShare.None))
-			{
-				theirStream.CopyTo(stream);
 			}
 
 			// start external merge tool
@@ -569,7 +556,7 @@ namespace GitGameGUI
 				process.WaitForExit();
 			}
 
-			// get new base has
+			// get new base hash
 			byte[] baseHashChange = null;
 			using (var md5 = MD5.Create())
 			{
