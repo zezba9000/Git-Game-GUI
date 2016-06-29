@@ -710,5 +710,47 @@ namespace GitGameGUI
 				MessageBox.Show("Failed to start Diff tool: " + ex.Message);
 			}
 		}
+
+		private void openFile_Click(object sender, RoutedEventArgs e)
+		{
+			// check for common mistakes
+			if (unstagedChangesListView.SelectedIndex < 0 && stagedChangesListView.SelectedIndex < 0)
+			{
+				MessageBox.Show("No file selected");
+				return;
+			}
+
+			try
+			{
+				var item = unstagedChangesListView.SelectedItem as FileItem;
+				if (item == null) item = stagedChangesListView.SelectedItem as FileItem;
+				Process.Start("explorer.exe", string.Format("{0}\\{1}", RepoUserControl.repoPath, item.filename));
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to open folder location: " + ex.Message);
+			}
+		}
+
+		private void openFileLocation_Click(object sender, RoutedEventArgs e)
+		{
+			// check for common mistakes
+			if (unstagedChangesListView.SelectedIndex < 0 && stagedChangesListView.SelectedIndex < 0)
+			{
+				MessageBox.Show("No file selected");
+				return;
+			}
+
+			try
+			{
+				var item = unstagedChangesListView.SelectedItem as FileItem;
+				if (item == null) item = stagedChangesListView.SelectedItem as FileItem;
+				Process.Start("explorer.exe", string.Format("{0}\\{1}", RepoUserControl.repoPath, System.IO.Path.GetPathRoot(item.filename)));
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to open folder location: " + ex.Message);
+			}
+		}
 	}
 }

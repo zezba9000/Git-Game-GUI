@@ -16,8 +16,8 @@
 				<TextBlock Text="{Binding Path=Filename}" VerticalAlignment="Center" ContextMenuService.ShowOnDisabled="True">
 					<TextBlock.ContextMenu>
 						<ContextMenu>
-							<MenuItem Header="Open file location"/>
-							<MenuItem Header="Open Diff tool"/>
+							<MenuItem Header="Open file" Click="openFile_Click"/>
+							<MenuItem Header="Open file location" Click="openFileLocation_Click"/>
 						</ContextMenu>
 					</TextBlock.ContextMenu>
 				</TextBlock>
