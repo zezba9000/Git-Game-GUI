@@ -1,8 +1,11 @@
-﻿using System;
+﻿using LibGit2Sharp;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace GitGameGUI
@@ -16,53 +19,87 @@ namespace GitGameGUI
 			programFilesx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).Replace(" (x86)", "");
 		}
 
-		public static bool IsTextFileType(string filename)
+		public static bool IsBinaryFileData(string filename)
 		{
-			string ext = System.IO.Path.GetExtension(filename);
-			switch (ext)
+			const int maxByteRead = 1024 * 1024 * 2;
+			using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.None))
 			{
-				// word docs
-				case ".txt":
-				case ".rtf":
-				case ".doc":
-				case ".docx":
-
-				// code docs
-				case ".cs":
-				case ".cpp":
-				case ".c":
-				case ".hpp":
-				case ".h":
-				case ".js":
-
-				// mark up docs
-				case ".xml":
-				case ".html":
-				case ".htm":
-				case ".css":
+				// if the file is to large consider a data file (2mb)
+				if (stream.Length > maxByteRead)
+				{
 					return true;
+				}
+
+				// check for \0 characters and if they accure before the end of file, this is a data file
+				int b = stream.ReadByte();
+				while (b != -1)
+				{
+					if (b == 0 && stream.Position < maxByteRead)
+					{
+						return true;
+					}
+
+					b = stream.ReadByte();
+				}
 			}
 
 			return false;
 		}
 
-		public static bool IsBinaryFileType(string filename)
+		public static bool IsGitLFSPtr(string data)
 		{
-			string ext = System.IO.Path.GetExtension(filename);
-			switch (ext)
-			{
-				case ".zip":
-				case ".7z":
-				case ".rar":
-				case ".bin":
-				case ".hex":
-				case ".raw":
-				case ".data":
-					return true;
-			}
-
-			return false;
+			if (data.Length >= 1024) return false;
+			var match = Regex.Match(data, @"version https://git-lfs.github.com/spec/v1.*oid sha256:.*size\s\n*", RegexOptions.Singleline);
+			return match.Success;
 		}
+
+		//public static bool IsTextFileType(string filename)
+		//{
+		//	string ext = Path.GetExtension(filename);
+		//	switch (ext)
+		//	{
+		//		// word docs
+		//		case ".txt":
+		//		case ".rtf":
+		//		case ".doc":
+		//		case ".docx":
+
+		//		// code docs
+		//		case ".cs":
+		//		case ".cpp":
+		//		case ".c":
+		//		case ".hpp":
+		//		case ".h":
+		//		case ".js":
+
+		//		// mark up docs
+		//		case ".xml":
+		//		case ".html":
+		//		case ".htm":
+		//		case ".css":
+		//			return true;
+		//	}
+
+		//	return false;
+		//}
+
+		//public static bool IsBinaryFileType(string filename)
+		//{
+		//	string ext = Path.GetExtension(filename);
+		//	switch (ext)
+		//	{
+		//		case ".zip":
+		//		case ".7z":
+		//		case ".rar":
+		//		case ".bin":
+		//		case ".hex":
+		//		case ".raw":
+		//		case ".data":
+		//			return true;
+		//	}
+
+		//	return false;
+		//}
 
 		public static void RunCmd(string operation, string workingDirectory)
 		{
@@ -145,6 +182,56 @@ namespace GitGameGUI
 			}
 
 			return true;
+		}
+
+		public static void SaveFileFromID(string filename, ObjectId id)
+		{
+			// get info
+			var blob = RepoUserControl.repo.Lookup<Blob>(id);
+
+			if (blob.Size < 1024 && IsGitLFSPtr(blob.GetContentText()))// check if lfs tracked file
+			{
+				// get lfs data from ptr
+				using (var process = new Process())
+				{
+					process.StartInfo.FileName = "git-lfs";
+					process.StartInfo.Arguments = "smudge";
+					process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+					process.StartInfo.RedirectStandardInput = true;
+					process.StartInfo.RedirectStandardOutput = true;
+					process.StartInfo.RedirectStandardError = true;
+					process.StartInfo.CreateNoWindow = true;
+					process.StartInfo.UseShellExecute = false;
+
+					process.Start();
+					using (var inStream = blob.GetContentStream())
+					{
+						inStream.CopyTo(process.StandardInput.BaseStream);
+						inStream.Flush();
+					}
+
+					process.StandardInput.Flush();
+					process.StandardInput.Close();
+					using (var outStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None))
+					{
+						process.StandardOutput.BaseStream.CopyTo(outStream);
+						process.StandardOutput.BaseStream.Flush();
+						process.StandardOutput.Close();
+						outStream.Flush();
+					}
+
+					process.WaitForExit();
+				}
+			}
+			else// if lfs fails try standard
+			{
+				// copy original
+				using (var inStream = blob.GetContentStream())
+				using (var outStream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None))
+				{
+					inStream.CopyTo(outStream);
+				}
+			}
 		}
 	}
 }

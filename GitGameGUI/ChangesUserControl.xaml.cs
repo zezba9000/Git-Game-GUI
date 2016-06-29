@@ -206,13 +206,17 @@ namespace GitGameGUI
 				// if new file just grab local data
 				if ((state & FileStatus.NewInWorkdir) != 0 || (state & FileStatus.NewInIndex) != 0)
 				{
-					if (Tools.IsTextFileType(item.FilePath))
+					if (!Tools.IsBinaryFileData(fullPath))
 					{
 						using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.None))
 						using (var reader = new StreamReader(stream))
 						{
 							diffTextBox.Text = reader.ReadToEnd();
 						}
+					}
+					else
+					{
+						diffTextBox.Text = "<< Binary File >>";
 					}
 
 					return;
@@ -222,7 +226,7 @@ namespace GitGameGUI
 				var file = RepoUserControl.repo.Index[item.FilePath];
 				var fileID = file.Id;
 				var blob = RepoUserControl.repo.Lookup<Blob>(fileID);
-				if (blob.IsBinary || Tools.IsBinaryFileType(item.FilePath))
+				if (blob.IsBinary || Tools.IsBinaryFileData(fullPath))
 				{
 					diffTextBox.Text = "<< Binary File >>";
 					return;
@@ -237,27 +241,11 @@ namespace GitGameGUI
 					else diffTextBox.Text = patch.Content;
 					return;
 				}
-				else if ((state & FileStatus.ModifiedInIndex) != 0)
-				{
-					diffTextBox.Text = blob.GetContentText();
-					return;
-				}
-				else if ((state & FileStatus.DeletedFromWorkdir) != 0 || (state & FileStatus.DeletedFromIndex) != 0)
-				{
-					diffTextBox.Text = blob.GetContentText();
-					return;
-				}
-				else if ((state & FileStatus.RenamedInWorkdir) != 0 || (state & FileStatus.RenamedInIndex) != 0)
-				{
-					diffTextBox.Text = blob.GetContentText();
-					return;
-				}
-				else if ((state & FileStatus.TypeChangeInWorkdir) != 0 || (state & FileStatus.TypeChangeInIndex) != 0)
-				{
-					diffTextBox.Text = blob.GetContentText();
-					return;
-				}
-				else if ((state& FileStatus.Conflicted) != 0)
+				else if ((state & FileStatus.ModifiedInIndex) != 0 ||
+					(state & FileStatus.DeletedFromWorkdir) != 0 || (state & FileStatus.DeletedFromIndex) != 0 ||
+					(state & FileStatus.RenamedInWorkdir) != 0 || (state & FileStatus.RenamedInIndex) != 0 ||
+					(state & FileStatus.TypeChangeInWorkdir) != 0 || (state & FileStatus.TypeChangeInIndex) != 0 ||
+					(state& FileStatus.Conflicted) != 0)
 				{
 					diffTextBox.Text = blob.GetContentText();
 					return;
@@ -494,6 +482,9 @@ namespace GitGameGUI
 			var ours = RepoUserControl.repo.Lookup<Blob>(conflict.Ours.Id);
 			var theirs = RepoUserControl.repo.Lookup<Blob>(conflict.Theirs.Id);
 
+			// TODO: copy both ours and theirs, then make binary merge tool visualize image diff
+			//Tools.SaveFileFromID(string.Format("{0}\\{1}.orig", RepoUserControl.repoPath, item.filename), changed.Target.Id);
+
 			// check if files are binary (if so open select source tool)
 			if (ours.IsBinary || theirs.IsBinary)
 			{
@@ -555,26 +546,28 @@ namespace GitGameGUI
 			}
 
 			// start external merge tool
-			var process = new Process();
-			process.StartInfo.FileName = RepoUserControl.mergeToolPath;
-			if (MainWindow.appSettings.mergeDiffTool == "Meld") process.StartInfo.Arguments = string.Format("{0}.ours {0}.base {0}.thiers", fullPath);
-			else if (MainWindow.appSettings.mergeDiffTool == "kDiff3") process.StartInfo.Arguments = string.Format("{0}.ours {0}.base {0}.thiers", fullPath);
-			else if (MainWindow.appSettings.mergeDiffTool == "P4Merge") process.StartInfo.Arguments = string.Format("{0}.base {0}.ours {0}.thiers {0}.base", fullPath);
-			else if (MainWindow.appSettings.mergeDiffTool == "DiffMerge") process.StartInfo.Arguments = string.Format("{0}.ours {0}.base {0}.thiers", fullPath);
-			process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
-			if (!process.Start())
+			using (var process = new Process())
 			{
-				MessageBox.Show("Failed to start Merge tool (is it installed?)");
+				process.StartInfo.FileName = RepoUserControl.mergeToolPath;
+				if (MainWindow.appSettings.mergeDiffTool == "Meld") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.thiers\"", fullPath);
+				else if (MainWindow.appSettings.mergeDiffTool == "kDiff3") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.thiers\"", fullPath);
+				else if (MainWindow.appSettings.mergeDiffTool == "P4Merge") process.StartInfo.Arguments = string.Format("\"{0}.base\" \"{0}.ours\" \"{0}.thiers\" \"{0}.base\"", fullPath);
+				else if (MainWindow.appSettings.mergeDiffTool == "DiffMerge") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.thiers\"", fullPath);
+				process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
+				if (!process.Start())
+				{
+					MessageBox.Show("Failed to start Merge tool (is it installed?)");
 
-				// delete temp files
-				if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
-				if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
-				if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
+					// delete temp files
+					if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
+					if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
+					if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
 
-				return false;
+					return false;
+				}
+
+				process.WaitForExit();
 			}
-
-			process.WaitForExit();
 
 			// get new base has
 			byte[] baseHashChange = null;
@@ -663,6 +656,58 @@ namespace GitGameGUI
 			{
 				MessageBox.Show("No files in conflict");
 				return;
+			}
+		}
+
+		private void openDiffToolButton_Click(object sender, RoutedEventArgs e)
+		{
+			// check for common mistakes
+			if (unstagedChangesListView.SelectedIndex < 0 && stagedChangesListView.SelectedIndex < 0)
+			{
+				MessageBox.Show("Must select file");
+				return;
+			}
+
+			try
+			{
+				// get selected item
+				var item = unstagedChangesListView.SelectedItem as FileItem;
+				if (item == null) item = stagedChangesListView.SelectedItem as FileItem;
+				if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.ModifiedInIndex) == 0 && (RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.ModifiedInWorkdir) == 0)
+				{
+					MessageBox.Show("This file is not modified");
+					return;
+				}
+
+				// get info and save orig file
+				string fullPath = string.Format("{0}\\{1}", RepoUserControl.repoPath, item.filename);
+				var changed = RepoUserControl.repo.Head.Tip[item.filename];
+				Tools.SaveFileFromID(string.Format("{0}\\{1}.orig", RepoUserControl.repoPath, item.filename), changed.Target.Id);
+
+				// open diff tool
+				using (var process = new Process())
+				{
+					process.StartInfo.FileName = RepoUserControl.mergeToolPath;
+					process.StartInfo.Arguments = string.Format("\"{0}.orig\" \"{0}\"", fullPath);
+					process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
+					if (!process.Start())
+					{
+						MessageBox.Show("Failed to start Diff tool (is it installed?)");
+
+						// delete temp files
+						if (File.Exists(fullPath + ".orig")) File.Delete(fullPath + ".orig");
+						return;
+					}
+
+					process.WaitForExit();
+				}
+
+				// delete temp files
+				if (File.Exists(fullPath + ".orig")) File.Delete(fullPath + ".orig");
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to start Diff tool: " + ex.Message);
 			}
 		}
 	}
