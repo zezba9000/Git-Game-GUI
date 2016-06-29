@@ -745,7 +745,7 @@ namespace GitGameGUI
 			{
 				var item = unstagedChangesListView.SelectedItem as FileItem;
 				if (item == null) item = stagedChangesListView.SelectedItem as FileItem;
-				Process.Start("explorer.exe", string.Format("{0}\\{1}", RepoUserControl.repoPath, System.IO.Path.GetPathRoot(item.filename)));
+				Process.Start("explorer.exe", string.Format("/select, {0}\\{1}", RepoUserControl.repoPath, item.filename));
 			}
 			catch (Exception ex)
 			{
