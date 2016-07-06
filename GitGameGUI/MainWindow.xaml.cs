@@ -23,6 +23,7 @@ namespace GitGameGUI
 	public partial class MainWindow : Window
 	{
 		public static MainWindow singleton;
+		private int lastSelectedTab = -1;
 
 		public static UpdateUICallbackMethod UpdateUICallback, FinishedUpdatingUICallback;
 		public static bool uiUpdating;
@@ -35,9 +36,9 @@ namespace GitGameGUI
 
 			// load settings
 			appSettings = Settings.Load<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\Settings.xml");
-			if (appSettings.gitLFS_IgnoreExts.Count == 0)
+			if (appSettings.defaultGitLFS_Exts.Count == 0)
 			{
-				appSettings.gitLFS_IgnoreExts.AddRange(new List<string>()
+				appSettings.defaultGitLFS_Exts.AddRange(new List<string>()
 				{
 					".psd", ".jpg", ".jpeg", ".png", ".bmp", ".tga",// image types
 					".mpeg", ".mov", ".avi", ".mp4", ".wmv",// video types
@@ -69,6 +70,17 @@ namespace GitGameGUI
 		public static void CanInteractWithUI(bool enabled)
 		{
 			singleton.tabControl.IsEnabled = enabled;
+		}
+
+		private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (tabControl.SelectedIndex != 3 && lastSelectedTab == 3)
+			{
+				RepoUserControl.SaveSettings();
+				UpdateUI();
+			}
+
+			lastSelectedTab = tabControl.SelectedIndex;
 		}
 	}
 }

@@ -19,112 +19,6 @@ using System.Windows.Shapes;
 
 namespace GitGameGUI
 {
-	public class LFSFilter : Filter
-    {
-		private Process process;
-		FilterMode mode;
-
-        public LFSFilter(string name, IEnumerable<FilterAttributeEntry> attributes) : base(name, attributes)
-        {
-        }
-
-        protected override void Clean(string path, string root, Stream input, Stream output)
-        {
-			try
-			{
-				// write all file data to stdin
-				input.CopyTo(process.StandardInput.BaseStream);
-				input.Flush();
-			}
-			catch (Exception e)
-			{
-				MessageBox.Show("Clean Error: " + e.Message);
-			}
-        }
-
-        protected override void Complete(string path, string root, Stream output)
-        {
-			try
-			{
-				// finalize stdin and wait for git-lfs to finish
-				process.StandardInput.Flush();
-				process.StandardInput.Close();
-				if (mode == FilterMode.Clean)
-				{
-					process.WaitForExit();
-
-					// write git-lfs pointer for 'clean' to git or file data for 'smudge' to working copy
-					process.StandardOutput.BaseStream.CopyTo(output);
-					process.StandardOutput.BaseStream.Flush();
-					process.StandardOutput.Close();
-					output.Flush();
-					output.Close();
-				}
-				else if (mode == FilterMode.Smudge)
-				{
-					// write git-lfs pointer for 'clean' to git or file data for 'smudge' to working copy
-					process.StandardOutput.BaseStream.CopyTo(output);
-					process.StandardOutput.BaseStream.Flush();
-					process.StandardOutput.Close();
-					output.Flush();
-					output.Close();
-
-					process.WaitForExit();
-				}
-
-				process.Dispose();
-			}
-			catch (Exception e)
-			{
-				MessageBox.Show(e.Message);
-			}
-		}
-
-        protected override void Create(string path, string root, FilterMode mode)
-        {
-			this.mode = mode;
-
-			try
-			{
-				// launch git-lfs
-				process = new Process();
-				process.StartInfo.FileName = "git-lfs";
-				process.StartInfo.Arguments = mode == FilterMode.Clean ? "clean" : "smudge";
-				process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
-				process.StartInfo.RedirectStandardInput = true;
-				process.StartInfo.RedirectStandardOutput = true;
-				process.StartInfo.RedirectStandardError = true;
-				process.StartInfo.CreateNoWindow = true;
-				process.StartInfo.UseShellExecute = false;
-
-				process.Start();
-			}
-			catch (Exception e)
-			{
-				MessageBox.Show("Create Error: " + e.Message);
-			}
-        }
-
-		protected override void Initialize()
-        {
-            base.Initialize();
-        }
-
-        protected override void Smudge(string path, string root, Stream input, Stream output)
-        {
-            try
-			{
-				// write git-lfs pointer to stdin
-				input.CopyTo(process.StandardInput.BaseStream);
-				input.Flush();
-			}
-			catch (Exception e)
-			{
-				MessageBox.Show("Smudge Error: " + e.Message);
-			}
-        }
-    }
-
     public partial class RepoUserControl : UserControl
 	{
 		private static RepoUserControl singleton;
@@ -152,7 +46,7 @@ namespace GitGameGUI
             {
                 new FilterAttributeEntry("lfs")
             };
-            var filter = new LFSFilter("lfs", filteredFiles);
+            var filter = new Filters.GitLFS("lfs", filteredFiles);
             lfsFilter = GlobalSettings.RegisterFilter(filter);
 			
 			// create signature
@@ -186,11 +80,16 @@ namespace GitGameGUI
 			if (activeRepoComboBox.Items.Count != 0) activeRepoComboBox.SelectedIndex = 0;
 		}
 
+		public static void SaveSettings()
+		{
+			if (repo != null) Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
+		}
+
 		public static void Dispose()
 		{
+			SaveSettings();
 			if (repo != null)
 			{
-				Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
 				repo.Dispose();
 				repo = null;
 			}
@@ -223,7 +122,7 @@ namespace GitGameGUI
 
 					// load repo settings
 					repoSettings = Settings.Load<XML.RepoSettings>(repoPath + "\\.gitgamegui");
-					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.validateLFS;
+					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.lfsSupport;
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
 					singleton.autoCommitMergeCheckBox.IsChecked = repoSettings.autoCommit;
 					singleton.autoPushRemoteMergeCheckBox.IsChecked = repoSettings.autoPush;
@@ -304,14 +203,14 @@ namespace GitGameGUI
 		private void AddDefaultGitLFS()
 		{
 			// init git lfs
-			Tools.RunCmd("git-lfs install", repoPath);
+			Tools.RunExe("git-lfs", "install", null);
 
 			// add default ext to git lfs
 			if (MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
-				foreach (string ext in MainWindow.appSettings.gitLFS_IgnoreExts)
+				foreach (string ext in MainWindow.appSettings.defaultGitLFS_Exts)
 				{
-					Tools.RunCmd(string.Format("git-lfs track \"*{0}\"", ext), repoPath);
+					Tools.RunExe("git-lfs", string.Format("track \"*{0}\"", ext), null);
 				}
 			}
 		}
@@ -417,9 +316,56 @@ namespace GitGameGUI
 			}
 		}
 
+		bool gitLFSSupportCheckBoxSkip = false;
 		private void gitLFSSupportCheckBox_Checked(object sender, RoutedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.validateLFS = gitLFSSupportCheckBox.IsChecked == true ? true : false;
+			if (repoSettings == null) return;
+			if (gitLFSSupportCheckBoxSkip)
+			{
+				gitLFSSupportCheckBoxSkip = false;
+				return;
+			}
+
+			if (gitLFSSupportCheckBox.IsChecked == true)
+			{
+				if (MessageBox.Show("Are you sure you want to add Git-LFS?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+				{
+					gitLFSSupportCheckBoxSkip = true;
+					gitLFSSupportCheckBox.IsChecked = false;
+					return;
+				}
+
+				try
+				{
+					repoSettings.lfsSupport = true;
+					AddDefaultGitLFS();
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("Add Gir-LFS Error: " + ex.Message);
+				}
+			}
+			else
+			{
+				if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you commit/pushed while using Git-LFS, its suggested you re-create your remote repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+				{
+					gitLFSSupportCheckBoxSkip = true;
+					gitLFSSupportCheckBox.IsChecked = true;
+					return;
+				}
+
+				try
+				{
+					repoSettings.lfsSupport = false;
+					Tools.RunExe("git-lfs", "uninit", null);
+					if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
+					if (Directory.Exists(repoPath + "\\.git\\lfs")) Directory.Delete(repoPath + "\\.git\\lfs", true);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("Remove Gir-LFS Error: " + ex.Message);
+				}
+			}
 		}
 
 		private void gitignoreExistsCheckBox_Checked(object sender, RoutedEventArgs e)
@@ -480,47 +426,11 @@ namespace GitGameGUI
 
 			try
 			{
-				Tools.RunCmd(string.Format("git-lfs track \"*{0}\"", gitLFSExtTextBox.Text), repoPath);
+				Tools.RunExe("git-lfs", string.Format("track \"*{0}\"", gitLFSExtTextBox.Text), null);
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Add Git-LFS Ext Error: " + ex.Message);
-			}
-		}
-
-		private void addGitLFSButton_Click(object sender, RoutedEventArgs e)
-		{
-			if (MessageBox.Show("Are you sure you want to add Git-LFS?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
-			{
-				return;
-			}
-
-			try
-			{
-				AddDefaultGitLFS();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Add Gir-LFS Error: " + ex.Message);
-			}
-		}
-
-		private void removeGitLFSButton_Click(object sender, RoutedEventArgs e)
-		{
-			if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you commit/pushed while using Git-LFS, its suggested you re-create your remote repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
-			{
-				return;
-			}
-
-			try
-			{
-				Tools.RunCmd("git-lfs uninit", repoPath);
-				if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
-				if (Directory.Exists(repoPath + "\\.git\\lfs")) Directory.Delete(repoPath + "\\.git\\lfs", true);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Remove Gir-LFS Error: " + ex.Message);
 			}
 		}
 	}

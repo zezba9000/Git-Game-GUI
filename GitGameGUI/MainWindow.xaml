@@ -9,7 +9,7 @@
         Title="Git-Game-GUI" Height="800" Width="1280" WindowStartupLocation="CenterScreen">
 
 	<Grid>
-		<TabControl x:Name="tabControl" Margin="0">
+		<TabControl x:Name="tabControl" Margin="0" SelectionChanged="tabControl_SelectionChanged">
 			<TabItem Header="Changes">
 				<self:ChangesUserControl/>
 			</TabItem>

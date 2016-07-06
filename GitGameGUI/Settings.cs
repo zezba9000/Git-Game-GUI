@@ -22,7 +22,7 @@ namespace GitGameGUI
 		{
 			[XmlAttribute("MergeDiffTool")] public string mergeDiffTool = "Meld";
 			[XmlElement("Repository")] public List<Repository> repositories = new List<Repository>();
-			[XmlElement("GitLFS-IgnoreExt")] public List<string> gitLFS_IgnoreExts = new List<string>();
+			[XmlElement("DefaultGitLFS-Ext")] public List<string> defaultGitLFS_Exts = new List<string>();
 		}
 
 		[XmlRoot("RepoSettings")]
@@ -32,7 +32,7 @@ namespace GitGameGUI
 			[XmlAttribute("SignatureEmail")] public string signatureEmail = "username@email.com";
 			[XmlAttribute("Username")] public string username = "Username";
 			[XmlAttribute("Password")] public string password = "password";
-			[XmlAttribute("ValidateLFS")] public bool validateLFS = true;
+			[XmlAttribute("LFSSupport")] public bool lfsSupport = false;
 			[XmlAttribute("ValidateGitignore")] public bool validateGitignore = true;
 			[XmlAttribute("AutoCommit")] public bool autoCommit = true;
 			[XmlAttribute("AutoPush")] public bool autoPush = true;

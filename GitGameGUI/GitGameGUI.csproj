@@ -73,6 +73,7 @@
     <Compile Include="CommitWindow.xaml.cs">
       <DependentUpon>CommitWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Filters\GitLFS.cs" />
     <Compile Include="HistoryUserControl.xaml.cs">
       <DependentUpon>HistoryUserControl.xaml</DependentUpon>
     </Compile>

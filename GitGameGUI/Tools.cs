@@ -62,66 +62,22 @@ namespace GitGameGUI
 			return match.Success;
 		}
 
-		//public static bool IsTextFileType(string filename)
-		//{
-		//	string ext = Path.GetExtension(filename);
-		//	switch (ext)
-		//	{
-		//		// word docs
-		//		case ".txt":
-		//		case ".rtf":
-		//		case ".doc":
-		//		case ".docx":
-
-		//		// code docs
-		//		case ".cs":
-		//		case ".cpp":
-		//		case ".c":
-		//		case ".hpp":
-		//		case ".h":
-		//		case ".js":
-
-		//		// mark up docs
-		//		case ".xml":
-		//		case ".html":
-		//		case ".htm":
-		//		case ".css":
-		//			return true;
-		//	}
-
-		//	return false;
-		//}
-
-		//public static bool IsBinaryFileType(string filename)
-		//{
-		//	string ext = Path.GetExtension(filename);
-		//	switch (ext)
-		//	{
-		//		case ".zip":
-		//		case ".7z":
-		//		case ".rar":
-		//		case ".bin":
-		//		case ".hex":
-		//		case ".raw":
-		//		case ".data":
-		//			return true;
-		//	}
-
-		//	return false;
-		//}
-
-		public static void RunCmd(string operation, string workingDirectory)
+		public static void RunExe(string exe, string arguments, string input, bool hideWindow = true)
 		{
 			var process = new Process();
-			process.StartInfo.FileName = "cmd";
-			process.StartInfo.WorkingDirectory = workingDirectory;
-			process.StartInfo.RedirectStandardInput = true;
-			process.StartInfo.CreateNoWindow = true;
+			process.StartInfo.FileName = exe;
+			process.StartInfo.Arguments = arguments;
+			process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+			process.StartInfo.RedirectStandardInput = input != null;
+			process.StartInfo.CreateNoWindow = hideWindow;
 			process.StartInfo.UseShellExecute = false;
 			process.Start();
-			process.StandardInput.WriteLine(operation);
-			process.StandardInput.Flush();
-			process.StandardInput.Close();
+			if (input != null)
+			{
+				process.StandardInput.WriteLine(input);
+				process.StandardInput.Flush();
+				process.StandardInput.Close();
+			}
 			process.WaitForExit();
 		}
 
