@@ -138,6 +138,15 @@ namespace GitGameGUI
 					// check for lfs
 					singleton.CheckGitLFS();
 
+					// check for .gitignore file
+					if (repoSettings.validateGitignore)
+					{
+						if (!File.Exists(repoPath + "\\.gitignore"))
+						{
+							MessageBox.Show("No '.gitignore' file exists.\nMake sure you add one!");
+						}
+					}
+
 					// create signature
 					signature = new Signature(repoSettings.signatureName, repoSettings.signatureEmail, DateTimeOffset.UtcNow);
 
