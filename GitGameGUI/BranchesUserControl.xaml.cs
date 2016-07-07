@@ -33,6 +33,7 @@ namespace GitGameGUI
 				var branches = RepoUserControl.repo.Branches;
 				foreach (var branch in branches)
 				{
+					// make sure we don't show remotes that match locals
 					if (branch.IsRemote)
 					{
 						if (branch.FriendlyName == "origin/HEAD" || branch.FriendlyName == "origin/master") continue;
@@ -51,6 +52,7 @@ namespace GitGameGUI
 						if (found) continue;
 					}
 
+					// add branch to list
 					int i = activeBranchComboBox.Items.Add(branch.FriendlyName);
 					otherBranchComboBox.Items.Add(branch.FriendlyName);
 					if (branch.IsCurrentRepositoryHead)
@@ -75,6 +77,8 @@ namespace GitGameGUI
 			try
 			{
 				string name = activeBranchComboBox.SelectedValue as string;
+
+				// see if the user wants to add a remote to local
 				if (name.Contains("origin/"))
 				{
 					name = name.Replace("origin/", "");
@@ -112,6 +116,7 @@ namespace GitGameGUI
 					}
 				}
 
+				// change branch
 				var selectedBranch = RepoUserControl.repo.Branches[name];
 				if (activeBranch != selectedBranch)
 				{
