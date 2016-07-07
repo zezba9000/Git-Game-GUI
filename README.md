@@ -10,10 +10,6 @@
 
 - Auto check for Git-LFS install
 
-- Auto commit and push merges
-
-- Auto push commits
-
 - Per project settings saved in .gitgamegui file
 
 - Doesn't allow non resolved files to be staged without warning.
@@ -22,4 +18,4 @@
 
 - Auto check for external Git-Core and Git-LFS updates and auto install them (tested locally first)
 
-- Other stuff like history, etc
+- gitk for history.
