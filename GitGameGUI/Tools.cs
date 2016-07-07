@@ -1,12 +1,8 @@
 ﻿using LibGit2Sharp;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace GitGameGUI
 {
@@ -140,8 +136,21 @@ namespace GitGameGUI
 					case 'X':
 					case 'Y':
 					case 'Z':
-					
-					continue;
+
+					case '0':
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+					case '8':
+					case '9':
+
+					case '_':
+
+						continue;
 					default: return false;
 				}
 			}

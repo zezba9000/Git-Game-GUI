@@ -19,10 +19,10 @@
 			<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Left" Margin="119,37,0,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>
 			<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Left" Margin="119,62,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
 
-			<Label Content="Clone URL:" HorizontalAlignment="Left" Margin="47,131,0,0" VerticalAlignment="Top"/>
+			<Label Content="URL:" HorizontalAlignment="Left" Margin="80,131,0,0" VerticalAlignment="Top"/>
 			<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="119,159,0,0" VerticalAlignment="Top" Width="120" Click="cloneButton_Click"/>
 			<Button x:Name="createButton" Content="Create New" HorizontalAlignment="Left" Margin="119,184,0,0" VerticalAlignment="Top" Width="120" Click="createButton_Click"/>
-			<TextBox x:Name="repoPathTextBox" Height="23" Margin="119,131,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+			<TextBox x:Name="repoURLTextBox" Height="23" Margin="119,131,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
 
 			<Label Content=": User Signature Name" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,91" VerticalAlignment="Bottom"/>
 			<Label Content=": User Signature Email" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,63" VerticalAlignment="Bottom"/>
@@ -35,10 +35,8 @@
 		</Grid>
 
 		<Grid Grid.Row="1">
-			<CheckBox x:Name="gitLFSSupportCheckBox" Content="Git-LFS Support" HorizontalAlignment="Left" Margin="10,0,0,123" VerticalAlignment="Bottom" Checked="gitLFSSupportCheckBox_Checked" Unchecked="gitLFSSupportCheckBox_Checked"/>
-			<CheckBox x:Name="gitignoreExistsCheckBox" Content="Validate .gitignore file exists" HorizontalAlignment="Left" Margin="10,0,0,103" VerticalAlignment="Bottom" Checked="gitignoreExistsCheckBox_Checked" Unchecked="gitignoreExistsCheckBox_Checked"/>
-			<CheckBox x:Name="autoCommitMergeCheckBox" Content="Auto Commit Successful Merge" HorizontalAlignment="Left" Margin="10,0,0,83" VerticalAlignment="Bottom" Checked="autoCommitMergeCheckBox_Checked" Unchecked="autoCommitMergeCheckBox_Checked"/>
-			<CheckBox x:Name="autoPushRemoteMergeCheckBox" Content="Auto Push Successful Remote Merge" HorizontalAlignment="Left" Margin="10,0,0,63" VerticalAlignment="Bottom" Checked="autoPushRemoteMergeCheckBox_Checked" Unchecked="autoPushRemoteMergeCheckBox_Checked"/>
+			<CheckBox x:Name="gitLFSSupportCheckBox" Content="Git-LFS Support" HorizontalAlignment="Left" Margin="10,0,0,83" VerticalAlignment="Bottom" Checked="gitLFSSupportCheckBox_Checked" Unchecked="gitLFSSupportCheckBox_Checked"/>
+			<CheckBox x:Name="gitignoreExistsCheckBox" Content="Validate .gitignore file exists" HorizontalAlignment="Left" Margin="10,0,0,63" VerticalAlignment="Bottom" Checked="gitignoreExistsCheckBox_Checked" Unchecked="gitignoreExistsCheckBox_Checked"/>
 
 			<Button x:Name="addGitLFSExtButton" Content="Add Git-LFS Ext to active repo" HorizontalAlignment="Left" Margin="10,0,0,38" VerticalAlignment="Bottom" Width="214" Click="addGitLFSExtButton_Click"/>
 			<TextBox x:Name="gitLFSExtTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,10" TextWrapping="Wrap" Text=".ext" VerticalAlignment="Bottom" Width="214"/>

@@ -5,18 +5,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace GitGameGUI
 {
@@ -188,82 +182,88 @@ namespace GitGameGUI
 			MainWindow.UpdateUI();
 		}
 
-		private void RefreshDiffText(ListView listView)
+		private void RefreshQuickView(ListView listView)
 		{
-			foreach (var item in RepoUserControl.repo.RetrieveStatus())
+			try
 			{
-				if (item.FilePath != ((FileItem)listView.SelectedValue).filename) continue;
-				var state = item.State;
-
-				// check if file still exists
-				string fullPath = RepoUserControl.repoPath + "\\" + item.FilePath;
-				if (!File.Exists(fullPath))
+				foreach (var item in RepoUserControl.repo.RetrieveStatus())
 				{
-					diffTextBox.Text = "<< File Doesn't Exist >>";
-					return;
-				}
+					if (item.FilePath != ((FileItem)listView.SelectedValue).filename) continue;
+					var state = item.State;
 
-				// if new file just grab local data
-				if ((state & FileStatus.NewInWorkdir) != 0 || (state & FileStatus.NewInIndex) != 0)
-				{
-					if (!Tools.IsBinaryFileData(fullPath))
+					// check if file still exists
+					string fullPath = RepoUserControl.repoPath + "\\" + item.FilePath;
+					if (!File.Exists(fullPath))
 					{
-						using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.None))
-						using (var reader = new StreamReader(stream))
+						diffTextBox.Text = "<< File Doesn't Exist >>";
+						return;
+					}
+
+					// if new file just grab local data
+					if ((state & FileStatus.NewInWorkdir) != 0 || (state & FileStatus.NewInIndex) != 0 || (state & FileStatus.Conflicted) != 0)
+					{
+						if (!Tools.IsBinaryFileData(fullPath))
 						{
-							diffTextBox.Text = reader.ReadToEnd();
+							using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.None))
+							using (var reader = new StreamReader(stream))
+							{
+								diffTextBox.Text = reader.ReadToEnd();
+							}
 						}
+						else
+						{
+							diffTextBox.Text = "<< Binary File >>";
+						}
+
+						return;
+					}
+
+					// check if binary file
+					var file = RepoUserControl.repo.Index[item.FilePath];
+					var fileID = file.Id;
+					var blob = RepoUserControl.repo.Lookup<Blob>(fileID);
+					if (blob.IsBinary || Tools.IsBinaryFileData(fullPath))
+					{
+						diffTextBox.Text = "<< Binary File >>";
+						return;
+					}
+
+					// check for text types
+					if ((state & FileStatus.ModifiedInWorkdir) != 0)
+					{
+						var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>(){item.FilePath});
+						var match = Regex.Match(patch.Content, @"@@.*@@\n(.*)", RegexOptions.Singleline);
+						if (match.Success && match.Groups.Count == 2) diffTextBox.Text = match.Groups[1].Value.Replace("\\ No newline at end of file\n", "");
+						else diffTextBox.Text = patch.Content;
+						return;
+					}
+					else if ((state & FileStatus.ModifiedInIndex) != 0 ||
+						(state & FileStatus.DeletedFromWorkdir) != 0 || (state & FileStatus.DeletedFromIndex) != 0 ||
+						(state & FileStatus.RenamedInWorkdir) != 0 || (state & FileStatus.RenamedInIndex) != 0 ||
+						(state & FileStatus.TypeChangeInWorkdir) != 0 || (state & FileStatus.TypeChangeInIndex) != 0)
+					{
+						diffTextBox.Text = blob.GetContentText();
+						return;
+					}
+					else if ((state & FileStatus.Ignored) != 0)
+					{
+						return;
+					}
+					else if ((state & FileStatus.Unreadable) != 0)
+					{
+						MessageBox.Show("Something is wrong. The file is not readable!");
+						return;
 					}
 					else
 					{
-						diffTextBox.Text = "<< Binary File >>";
+						MessageBox.Show("Unsuported FileStatus: " + state);
+						return;
 					}
-
-					return;
 				}
-
-				// check if binary file
-				var file = RepoUserControl.repo.Index[item.FilePath];
-				var fileID = file.Id;
-				var blob = RepoUserControl.repo.Lookup<Blob>(fileID);
-				if (blob.IsBinary || Tools.IsBinaryFileData(fullPath))
-				{
-					diffTextBox.Text = "<< Binary File >>";
-					return;
-				}
-
-				// check for text types
-				if ((state & FileStatus.ModifiedInWorkdir) != 0)
-				{
-					var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>(){item.FilePath});
-					var match = Regex.Match(patch.Content, @"@@.*@@\n(.*)", RegexOptions.Singleline);
-					if (match.Success && match.Groups.Count == 2) diffTextBox.Text = match.Groups[1].Value.Replace("\\ No newline at end of file\n", "");
-					else diffTextBox.Text = patch.Content;
-					return;
-				}
-				else if ((state & FileStatus.ModifiedInIndex) != 0 ||
-					(state & FileStatus.DeletedFromWorkdir) != 0 || (state & FileStatus.DeletedFromIndex) != 0 ||
-					(state & FileStatus.RenamedInWorkdir) != 0 || (state & FileStatus.RenamedInIndex) != 0 ||
-					(state & FileStatus.TypeChangeInWorkdir) != 0 || (state & FileStatus.TypeChangeInIndex) != 0 ||
-					(state& FileStatus.Conflicted) != 0)
-				{
-					diffTextBox.Text = blob.GetContentText();
-					return;
-				}
-				else if ((state & FileStatus.Ignored) != 0)
-				{
-					return;
-				}
-				else if ((state & FileStatus.Unreadable) != 0)
-				{
-					MessageBox.Show("Something is wrong. The file is not readable!");
-					return;
-				}
-				else
-				{
-					MessageBox.Show("Unsuported FileStatus: " + state);
-					return;
-				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to refresh quick view: " + ex.Message);
 			}
 		}
 
@@ -276,9 +276,9 @@ namespace GitGameGUI
 				diffTextBox.Text = "";
 				return;
 			}
-
+			
 			stagedChangesListView.SelectedItem = null;
-			RefreshDiffText(unstagedChangesListView);
+			RefreshQuickView(unstagedChangesListView);
 		}
 
 		private void stagedChangesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -292,7 +292,7 @@ namespace GitGameGUI
 			}
 
 			unstagedChangesListView.SelectedItem = null;
-			RefreshDiffText(stagedChangesListView);
+			RefreshQuickView(stagedChangesListView);
 		}
 
 		private void StackPanel_MouseDown(object sender, MouseButtonEventArgs e)
@@ -307,43 +307,62 @@ namespace GitGameGUI
 			var image = sender as Image;
 
 			// stage file
-			foreach (var item in unstagedChangesListView.Items)
+			try
 			{
-				var fileItem = ((FileItem)item);
-				if (image.Source == fileItem.icon)
+				foreach (var item in unstagedChangesListView.Items)
 				{
-					if ((RepoUserControl.repo.RetrieveStatus(fileItem.filename) & FileStatus.Conflicted) != 0)
+					var fileItem = ((FileItem)item);
+					if (image.Source == fileItem.icon)
 					{
-						if (MessageBox.Show("Are you sure you want to accept the current changes as merged?\nConflicted file: " + fileItem.filename, "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+						if ((RepoUserControl.repo.RetrieveStatus(fileItem.filename) & FileStatus.Conflicted) != 0)
 						{
-							return;
+							if (MessageBox.Show("Are you sure you want to accept the current changes as merged?\nConflicted file: " + fileItem.filename, "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+							{
+								return;
+							}
 						}
+
+						RepoUserControl.repo.Stage(fileItem.filename);
+						unstagedChangesListView.Items.Remove(item);
+						stagedChangesListView.Items.Add(item);
+						return;
 					}
-					
-					RepoUserControl.repo.Stage(fileItem.filename);
-					unstagedChangesListView.Items.Remove(item);
-					stagedChangesListView.Items.Add(item);
-					return;
 				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to stage item: " + ex.Message);
+				return;
 			}
 
 			// unstage file
-			foreach (var item in stagedChangesListView.Items)
+			try
 			{
-				var fileItem = ((FileItem)item);
-				if (image.Source == fileItem.icon)
+				foreach (var item in stagedChangesListView.Items)
 				{
-					RepoUserControl.repo.Unstage(fileItem.filename);
-					stagedChangesListView.Items.Remove(item);
-					unstagedChangesListView.Items.Add(item);
-					return;
+					var fileItem = ((FileItem)item);
+					if (image.Source == fileItem.icon)
+					{
+						RepoUserControl.repo.Unstage(fileItem.filename);
+						stagedChangesListView.Items.Remove(item);
+						unstagedChangesListView.Items.Add(item);
+						return;
+					}
 				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to un-stage item: " + ex.Message);
+				return;
 			}
 		}
 
 		private void revertAllButton_Click(object sender, RoutedEventArgs e)
 		{
-			if (MessageBox.Show("Are you sure you want to revert all local changes?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+			if (MessageBox.Show("Are you sure you want to revert all local changes?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			{
+				return;
+			}
 
 			try
 			{
@@ -359,33 +378,49 @@ namespace GitGameGUI
 
 		private void stageAllButton_Click(object sender, RoutedEventArgs e)
 		{
-			var items = new FileItem[unstagedChangesListView.Items.Count];
-			unstagedChangesListView.Items.CopyTo(items, 0);
-			foreach (var item in items)
+			try
 			{
-				if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) != 0)
+				var items = new FileItem[unstagedChangesListView.Items.Count];
+				unstagedChangesListView.Items.CopyTo(items, 0);
+				foreach (var item in items)
 				{
-					if (MessageBox.Show("Are you sure you want to accept the current changes as merged?\nConflicted file: " + item.filename, "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+					if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) != 0)
 					{
-						continue;
+						if (MessageBox.Show("Are you sure you want to accept the current changes as merged?\nConflicted file: " + item.filename, "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+						{
+							continue;
+						}
 					}
-				}
 				
-				RepoUserControl.repo.Stage(item.filename);
-				unstagedChangesListView.Items.Remove(item);
-				stagedChangesListView.Items.Add(item);
+					RepoUserControl.repo.Stage(item.filename);
+					unstagedChangesListView.Items.Remove(item);
+					stagedChangesListView.Items.Add(item);
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to stage all items: " + ex.Message);
+				return;
 			}
 		}
 
 		private void unstageAllButton_Click(object sender, RoutedEventArgs e)
 		{
-			var items = new FileItem[stagedChangesListView.Items.Count];
-			stagedChangesListView.Items.CopyTo(items, 0);
-			foreach (var item in items)
+			try
 			{
-				RepoUserControl.repo.Unstage(item.filename);
-				stagedChangesListView.Items.Remove(item);
-				unstagedChangesListView.Items.Add(item);
+				var items = new FileItem[stagedChangesListView.Items.Count];
+				stagedChangesListView.Items.CopyTo(items, 0);
+				foreach (var item in items)
+				{
+					RepoUserControl.repo.Unstage(item.filename);
+					stagedChangesListView.Items.Remove(item);
+					unstagedChangesListView.Items.Add(item);
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to un-stage all items: " + ex.Message);
+				return;
 			}
 		}
 
@@ -396,7 +431,7 @@ namespace GitGameGUI
 				MessageBox.Show("Nothing to commit!");
 				return;
 			}
-
+			
 			var commitWindow = new CommitWindow(sender == commitPullPushButton ? CommitWindowTypes.CommitPullPush : CommitWindowTypes.CommitOnly);
 			commitWindow.Owner = MainWindow.singleton;
 			commitWindow.Show();
@@ -453,12 +488,13 @@ namespace GitGameGUI
 				var options = new PullOptions();
 				options.FetchOptions = new FetchOptions();
 				options.FetchOptions.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
+				options.FetchOptions.TagFetchMode = TagFetchMode.All;
 				RepoUserControl.repo.Network.Pull(RepoUserControl.signature, options);
 				ResolveConflicts();
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(string.Format("Failed to pull: {0}\nYou either need to stage and commit conflicting files\nor delete conflicting files.", ex.Message));
+				MessageBox.Show(string.Format("Failed to pull: {0}\n\nIf this is from a merge conflict.\nYou either need to stage and commit conflicting files\nor delete conflicting files.", ex.Message));
 			}
 		}
 
@@ -484,7 +520,7 @@ namespace GitGameGUI
 
 			// save local temp files
 			Tools.SaveFileFromID(fullPath + ".ours", ours.Id);
-			Tools.SaveFileFromID(fullPath + ".theirs", ours.Id);
+			Tools.SaveFileFromID(fullPath + ".theirs", theirs.Id);
 
 			// check if files are binary (if so open select binary file tool)
 			if (ours.IsBinary || theirs.IsBinary || Tools.IsBinaryFileData(fullPath + ".ours") || Tools.IsBinaryFileData(fullPath + ".theirs"))
@@ -507,7 +543,7 @@ namespace GitGameGUI
 				// delete temp files
 				if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
 				if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
-				if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
+				if (File.Exists(fullPath + ".theirs")) File.Delete(fullPath + ".theirs");
 
 				return true;
 			}
@@ -536,10 +572,10 @@ namespace GitGameGUI
 			using (var process = new Process())
 			{
 				process.StartInfo.FileName = RepoUserControl.mergeToolPath;
-				if (MainWindow.appSettings.mergeDiffTool == "Meld") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.thiers\"", fullPath);
-				else if (MainWindow.appSettings.mergeDiffTool == "kDiff3") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.thiers\"", fullPath);
-				else if (MainWindow.appSettings.mergeDiffTool == "P4Merge") process.StartInfo.Arguments = string.Format("\"{0}.base\" \"{0}.ours\" \"{0}.thiers\" \"{0}.base\"", fullPath);
-				else if (MainWindow.appSettings.mergeDiffTool == "DiffMerge") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.thiers\"", fullPath);
+				if (MainWindow.appSettings.mergeDiffTool == "Meld") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.theirs\"", fullPath);
+				else if (MainWindow.appSettings.mergeDiffTool == "kDiff3") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.theirs\"", fullPath);
+				else if (MainWindow.appSettings.mergeDiffTool == "P4Merge") process.StartInfo.Arguments = string.Format("\"{0}.base\" \"{0}.ours\" \"{0}.theirs\" \"{0}.base\"", fullPath);
+				else if (MainWindow.appSettings.mergeDiffTool == "DiffMerge") process.StartInfo.Arguments = string.Format("\"{0}.ours\" \"{0}.base\" \"{0}.theirs\"", fullPath);
 				process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
 				if (!process.Start())
 				{
@@ -548,7 +584,7 @@ namespace GitGameGUI
 					// delete temp files
 					if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
 					if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
-					if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
+					if (File.Exists(fullPath + ".theirs")) File.Delete(fullPath + ".theirs");
 
 					return false;
 				}
@@ -578,7 +614,7 @@ namespace GitGameGUI
 			// delete temp files
 			if (File.Exists(fullPath + ".base")) File.Delete(fullPath + ".base");
 			if (File.Exists(fullPath + ".ours")) File.Delete(fullPath + ".ours");
-			if (File.Exists(fullPath + ".thiers")) File.Delete(fullPath + ".thiers");
+			if (File.Exists(fullPath + ".theirs")) File.Delete(fullPath + ".theirs");
 
 			// check if user accepts the current state of the merge
 			if (MessageBox.Show("No changes detected. Accept as merged?", "Accept Merge?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
@@ -623,7 +659,9 @@ namespace GitGameGUI
 			int conflictedFiles = 0;
 			try
 			{
-				foreach (FileItem item in unstagedChangesListView.Items)
+				var items = new FileItem[unstagedChangesListView.Items.Count];
+				unstagedChangesListView.Items.CopyTo(items, 0);
+				foreach (FileItem item in items)
 				{
 					if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.Conflicted) != 0)
 					{
@@ -635,6 +673,7 @@ namespace GitGameGUI
 			catch (Exception ex)
 			{
 				MessageBox.Show("Failed to resolve some files: " + ex.Message);
+				UpdateUI();
 				return;
 			}
 

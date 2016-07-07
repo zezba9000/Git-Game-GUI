@@ -1,25 +1,13 @@
 ﻿using LibGit2Sharp;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace GitGameGUI
 {
-    public partial class RepoUserControl : UserControl
+	public partial class RepoUserControl : UserControl
 	{
 		private static RepoUserControl singleton;
 		
@@ -82,7 +70,15 @@ namespace GitGameGUI
 
 		public static void SaveSettings()
 		{
-			if (repo != null) Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
+			if (repo != null)
+			{
+				// save gui settings
+				Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
+
+				// save repo settings
+				var origin = repo.Network.Remotes["origin"];
+				if (origin != null) repo.Network.Remotes.Update(origin, r => r.Url = singleton.repoURLTextBox.Text);
+			}
 		}
 
 		public static void Dispose()
@@ -102,6 +98,8 @@ namespace GitGameGUI
 		
 		public static void OpenRepo(string repoPath)
 		{
+			MainWindow.uiUpdating = true;
+
 			// dispose current
 			signature = null;
 			credentials = null;
@@ -120,16 +118,25 @@ namespace GitGameGUI
 					RepoUserControl.repoPath = repoPath;
 					repo = new Repository(repoPath);
 
+					// load repo url
+					singleton.repoURLTextBox.Text = "";
+					foreach (var remote in repo.Network.Remotes)
+					{
+						singleton.repoURLTextBox.Text = repo.Network.Remotes["origin"].Url;
+						break;
+					}
+
 					// load repo settings
 					repoSettings = Settings.Load<XML.RepoSettings>(repoPath + "\\.gitgamegui");
 					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.lfsSupport;
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
-					singleton.autoCommitMergeCheckBox.IsChecked = repoSettings.autoCommit;
-					singleton.autoPushRemoteMergeCheckBox.IsChecked = repoSettings.autoPush;
 					singleton.sigNameTextBox.Text = repoSettings.signatureName;
 					singleton.sigEmailTextBox.Text = repoSettings.signatureEmail;
 					singleton.usernameTextBox.Text = repoSettings.username;
 					singleton.passTextBox.Password = repoSettings.password;
+
+					// check for lfs
+					singleton.CheckGitLFS();
 
 					// create signature
 					signature = new Signature(repoSettings.signatureName, repoSettings.signatureEmail, DateTimeOffset.UtcNow);
@@ -196,27 +203,60 @@ namespace GitGameGUI
 				singleton.activeRepoComboBox.Items.Remove(repoPath);
 				singleton.activeRepoComboBox.SelectedItem = null;
 			}
-			
+
+			MainWindow.uiUpdating = false;
 			MainWindow.UpdateUI();
 		}
 
-		private void AddDefaultGitLFS()
+		private bool CheckGitLFS()
 		{
+			// make sure the user wants this check
+			if (!repoSettings.lfsSupport)
+			{
+				gitLFSSupportCheckBoxSkip = true;
+				gitLFSSupportCheckBox.IsChecked = false;
+				return false;
+			}
+
+			// check if already init
+			if (!Directory.Exists(repoPath + "\\.git\\lfs") || !File.Exists(repoPath + "\\.gitattributes"))
+			{
+				// ask user for default git lfs support
+				if (MessageBox.Show("Git-LFS not found or fully init.\nDo you want to init Git-LFS?", "Git-LFS?", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+				{
+					repoSettings.lfsSupport = false;
+					gitLFSSupportCheckBoxSkip = true;
+					gitLFSSupportCheckBox.IsChecked = false;
+					return false;
+				}
+			}
+
 			// init git lfs
-			Tools.RunExe("git-lfs", "install", null);
+			if (!Directory.Exists(repoPath + "\\.git\\lfs")) Tools.RunExe("git-lfs", "install", null);
 
 			// add default ext to git lfs
-			if (MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			if (!File.Exists(repoPath + "\\.gitattributes") && MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
 				foreach (string ext in MainWindow.appSettings.defaultGitLFS_Exts)
 				{
 					Tools.RunExe("git-lfs", string.Format("track \"*{0}\"", ext), null);
 				}
 			}
+
+			return true;
 		}
 
 		private void createButton_Click(object sender, RoutedEventArgs e)
 		{
+			if (string.IsNullOrEmpty(repoURLTextBox.Text))
+			{
+				if (MessageBox.Show("If you dont add a URL the repo will be local only.\nDo you want to continue?", "Warning", MessageBoxButton.OKCancel) != MessageBoxResult.OK)
+				{
+					return;
+				}
+			}
+
+			string remoteURL = repoURLTextBox.Text;
 			try
 			{
 				var dlg = new System.Windows.Forms.FolderBrowserDialog();
@@ -224,14 +264,17 @@ namespace GitGameGUI
 				if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
 				{
 					// init git repo
-					Repository.Init(dlg.SelectedPath);
+					Repository.Init(dlg.SelectedPath, false);
 					OpenRepo(dlg.SelectedPath);
-
-					// ask user for default git lfs support
-					if (MessageBox.Show("Do you want to init Git-LFS?", "Git-LFS?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+					if (!string.IsNullOrEmpty(remoteURL))
 					{
-						AddDefaultGitLFS();
+						repo.Network.Remotes.Add("origin", remoteURL);
+						repoURLTextBox.Text = remoteURL;
 					}
+				}
+				else
+				{
+					return;
 				}
 			}
 			catch (Exception ex)
@@ -245,6 +288,12 @@ namespace GitGameGUI
 
 		private void cloneButton_Click(object sender, RoutedEventArgs e)
 		{
+			if (string.IsNullOrEmpty(repoURLTextBox.Text))
+			{
+				MessageBox.Show("Must enter a URL");
+				return;
+			}
+
 			try
 			{
 				var dlg = new System.Windows.Forms.FolderBrowserDialog();
@@ -254,7 +303,7 @@ namespace GitGameGUI
 					var options = new CloneOptions();
 					options.IsBare = false;
 					options.CredentialsProvider = (_url, _user, _cred) => credentials;
-					Repository.Clone(repoPathTextBox.Text, dlg.SelectedPath, options);
+					Repository.Clone(repoURLTextBox.Text, dlg.SelectedPath, options);
 					OpenRepo(dlg.SelectedPath);
 				}
 			}
@@ -292,6 +341,7 @@ namespace GitGameGUI
 		{
 			if (MainWindow.uiUpdating || !canTriggerRepoChange) return;
 
+			SaveSettings();
 			if (activeRepoComboBox.Items.Count != 0) OpenRepo(activeRepoComboBox.SelectedItem as string);
 			else OpenRepo(null);
 		}
@@ -319,7 +369,7 @@ namespace GitGameGUI
 		bool gitLFSSupportCheckBoxSkip = false;
 		private void gitLFSSupportCheckBox_Checked(object sender, RoutedEventArgs e)
 		{
-			if (repoSettings == null) return;
+			if (repoSettings == null || MainWindow.uiUpdating) return;
 			if (gitLFSSupportCheckBoxSkip)
 			{
 				gitLFSSupportCheckBoxSkip = false;
@@ -328,26 +378,19 @@ namespace GitGameGUI
 
 			if (gitLFSSupportCheckBox.IsChecked == true)
 			{
-				if (MessageBox.Show("Are you sure you want to add Git-LFS?", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
-				{
-					gitLFSSupportCheckBoxSkip = true;
-					gitLFSSupportCheckBox.IsChecked = false;
-					return;
-				}
-
 				try
 				{
 					repoSettings.lfsSupport = true;
-					AddDefaultGitLFS();
+					CheckGitLFS();
 				}
 				catch (Exception ex)
 				{
-					MessageBox.Show("Add Gir-LFS Error: " + ex.Message);
+					MessageBox.Show("Add Git-LFS Error: " + ex.Message);
 				}
 			}
 			else
 			{
-				if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you commit/pushed while using Git-LFS, its suggested you re-create your remote repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+				if (MessageBox.Show("Are you sure you want to remove Git-LFS?\nIf you commit or pushed while using Git-LFS, its suggested you re-base your repo.", "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
 				{
 					gitLFSSupportCheckBoxSkip = true;
 					gitLFSSupportCheckBox.IsChecked = true;
@@ -363,44 +406,36 @@ namespace GitGameGUI
 				}
 				catch (Exception ex)
 				{
-					MessageBox.Show("Remove Gir-LFS Error: " + ex.Message);
+					MessageBox.Show("Remove Git-LFS Error: " + ex.Message);
 				}
 			}
 		}
 
 		private void gitignoreExistsCheckBox_Checked(object sender, RoutedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.validateGitignore = gitignoreExistsCheckBox.IsChecked == true ? true : false;
-		}
-
-		private void autoCommitMergeCheckBox_Checked(object sender, RoutedEventArgs e)
-		{
-			if (repoSettings != null) repoSettings.autoCommit = autoCommitMergeCheckBox.IsChecked == true ? true : false;
-		}
-
-		private void autoPushRemoteMergeCheckBox_Checked(object sender, RoutedEventArgs e)
-		{
-			if (repoSettings != null) repoSettings.autoPush = autoPushRemoteMergeCheckBox.IsChecked == true ? true : false;
+			if (repoSettings != null || MainWindow.uiUpdating) repoSettings.validateGitignore = gitignoreExistsCheckBox.IsChecked == true ? true : false;
 		}
 
 		private void sigNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.signatureName = sigNameTextBox.Text;
+			if (repoSettings != null || MainWindow.uiUpdating) repoSettings.signatureName = sigNameTextBox.Text;
 		}
 
 		private void sigEmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (repoSettings != null) repoSettings.signatureEmail = sigEmailTextBox.Text;
+			if (repoSettings != null || MainWindow.uiUpdating) repoSettings.signatureEmail = sigEmailTextBox.Text;
 		}
 
 		private void usernameTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
+			if (MainWindow.uiUpdating) return;
 			if (repoSettings != null) repoSettings.username = usernameTextBox.Text;
 			if (credentials != null) credentials.Username = usernameTextBox.Text;
 		}
 
 		private void passTextBox_PasswordChanged(object sender, RoutedEventArgs e)
 		{
+			if (MainWindow.uiUpdating) return;
 			if (repoSettings != null) repoSettings.password = passTextBox.Password;
 			if (credentials != null) credentials.Password = passTextBox.Password;
 		}

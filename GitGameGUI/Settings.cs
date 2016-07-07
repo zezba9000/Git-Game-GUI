@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
@@ -32,10 +29,8 @@ namespace GitGameGUI
 			[XmlAttribute("SignatureEmail")] public string signatureEmail = "username@email.com";
 			[XmlAttribute("Username")] public string username = "Username";
 			[XmlAttribute("Password")] public string password = "password";
-			[XmlAttribute("LFSSupport")] public bool lfsSupport = false;
+			[XmlAttribute("LFSSupport")] public bool lfsSupport = true;
 			[XmlAttribute("ValidateGitignore")] public bool validateGitignore = true;
-			[XmlAttribute("AutoCommit")] public bool autoCommit = true;
-			[XmlAttribute("AutoPush")] public bool autoPush = true;
 		}
 	}
 
