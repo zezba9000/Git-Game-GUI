@@ -6,21 +6,12 @@ using System.ComponentModel;
 
 namespace GitGameGUI
 {
-	public enum CommitWindowTypes
-	{
-		CommitOnly,
-		CommitPullPush
-	}
-
 	public partial class CommitWindow : Window
 	{
-		private CommitWindowTypes type;
-
-		public CommitWindow(CommitWindowTypes type)
+		public CommitWindow()
 		{
 			InitializeComponent();
 			MainWindow.CanInteractWithUI(false);
-			this.type = type;
 		}
 
 		protected override void OnClosing(CancelEventArgs e)
@@ -45,12 +36,6 @@ namespace GitGameGUI
 			try
 			{
 				RepoUserControl.repo.Commit(messageTextBox.Text, RepoUserControl.signature, RepoUserControl.signature);
-
-				if (type == CommitWindowTypes.CommitPullPush)
-				{
-					ChangesUserControl.Pull();
-					if (RepoUserControl.repo.Index.Conflicts.Count() == 0) ChangesUserControl.Push();
-				}
 			}
 			catch (Exception ex)
 			{

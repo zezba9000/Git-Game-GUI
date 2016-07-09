@@ -39,6 +39,22 @@ namespace GitGameGUI
 			UpdateUI();
 		}
 
+		bool shown = false;
+		protected override void OnContentRendered(EventArgs e)
+		{
+			base.OnContentRendered(e);
+
+			if (!shown)
+			{
+				shown = true;
+
+				// check for updates
+				var updateWindow = new CheckUpdatesWindow("http://reign-studios-services.com/GitGameGUI/VersionInfo.xml");
+				updateWindow.Owner = this;
+				updateWindow.Show();
+			}
+		}
+
 		protected override void OnClosing(CancelEventArgs e)
 		{
 			RepoUserControl.Dispose();

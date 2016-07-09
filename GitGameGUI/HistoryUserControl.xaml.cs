@@ -30,7 +30,7 @@ namespace GitGameGUI
 			}
 
 			process.WaitForExit();
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 	}
 }

@@ -54,7 +54,7 @@ namespace GitGameGUI
 
 					// add branch to list
 					int i = activeBranchComboBox.Items.Add(branch.FriendlyName);
-					otherBranchComboBox.Items.Add(branch.FriendlyName);
+					if (!branch.IsRemote) otherBranchComboBox.Items.Add(branch.FriendlyName);
 					if (branch.IsCurrentRepositoryHead)
 					{
 						activeBranchComboBox.SelectedIndex = i;
@@ -129,7 +129,7 @@ namespace GitGameGUI
 				MessageBox.Show("Checkout Branch Error: " + ex.Message);
 			}
 			
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 
 		private void mergeButton_Click(object sender, RoutedEventArgs e)
@@ -232,7 +232,7 @@ namespace GitGameGUI
 				MessageBox.Show("Create mew Branch Error: " + ex.Message);
 			}
 
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 
 		private void renameBranchButton_Click(object sender, RoutedEventArgs e)
@@ -275,7 +275,7 @@ namespace GitGameGUI
 				MessageBox.Show("Create mew Branch Error: " + ex.Message);
 			}
 
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 	}
 }

@@ -95,6 +95,11 @@ namespace GitGameGUI
 		{
 			if (repo == null && activeRepoComboBox.SelectedItem != null) OpenRepo(activeRepoComboBox.Text);
 		}
+
+		public static void Refresh()
+		{
+			OpenRepo(repoPath);
+		}
 		
 		public static void OpenRepo(string repoPath)
 		{

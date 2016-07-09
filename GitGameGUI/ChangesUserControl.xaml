@@ -69,14 +69,14 @@
 		<TabControl x:Name="tabControl" Margin="10" Grid.Row="1">
 			<TabItem Header="Simple">
 				<Grid Background="#FFE5E5E5">
-					<Button x:Name="pullChangesButton" FontSize="18" Content="Pull" Margin="0,10,10,10" Click="pullChangesButton_Click" HorizontalAlignment="Right" Width="256"/>
-					<Button x:Name="commitPullPushButton" FontSize="18" Content="Commit>Pull>Push" Margin="10,10,0,10" Click="commitStagedButton_Click" HorizontalAlignment="Left" Width="256"/>
+					<Button x:Name="commitStagedButton" FontSize="18" Content="Commit" Margin="10,10,0,10" Click="commitStagedButton_Click" HorizontalAlignment="Left" Width="256"/>
+					<Button x:Name="syncChangesButton" FontSize="18" Content="Sync" Margin="0,10,10,10" Click="syncChangesButton_Click" HorizontalAlignment="Right" Width="256"/>
 				</Grid>
 			</TabItem>
 			<TabItem Header="Advanced">
 				<Grid Background="#FFE5E5E5">
 					<Button x:Name="pullChangesButton2" FontSize="18" Content="Pull" Margin="0,10,0,10" Click="pullChangesButton_Click" HorizontalAlignment="Center" Width="256"/>
-					<Button x:Name="commitStagedButton" FontSize="18" Content="Commit" Margin="10,10,0,10" Click="commitStagedButton_Click" HorizontalAlignment="Left" Width="256"/>
+					<Button x:Name="commitStagedButton2" FontSize="18" Content="Commit" Margin="10,10,0,10" Click="commitStagedButton_Click" HorizontalAlignment="Left" Width="256"/>
 					<Button x:Name="pushChangesButton" FontSize="18" Content="Push" Margin="0,10,10,10" Click="pushChangesButton_Click" HorizontalAlignment="Right" Width="256"/>
 				</Grid>
 			</TabItem>

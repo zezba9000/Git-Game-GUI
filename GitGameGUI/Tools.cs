@@ -77,6 +77,28 @@ namespace GitGameGUI
 			process.WaitForExit();
 		}
 
+		public static string RunExeOutput(string exe, string arguments, string input, bool hideWindow = true)
+		{
+			var process = new Process();
+			process.StartInfo.FileName = exe;
+			process.StartInfo.Arguments = arguments;
+			process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+			process.StartInfo.RedirectStandardInput = input != null;
+			process.StartInfo.RedirectStandardOutput = true;
+			process.StartInfo.CreateNoWindow = hideWindow;
+			process.StartInfo.UseShellExecute = false;
+			process.Start();
+			if (input != null)
+			{
+				process.StandardInput.WriteLine(input);
+				process.StandardInput.Flush();
+				process.StandardInput.Close();
+			}
+			process.WaitForExit();
+
+			return process.StandardOutput.ReadToEnd();
+		}
+
 		public static bool IsSingleWord(string value)
 		{
 			foreach (char c in value)

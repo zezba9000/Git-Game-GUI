@@ -179,7 +179,7 @@ namespace GitGameGUI
 
 		private void refreshChangedButton_Click(object sender, RoutedEventArgs e)
 		{
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 
 		private void RefreshQuickView(ListView listView)
@@ -395,7 +395,7 @@ namespace GitGameGUI
 				MessageBox.Show("Failed to reset: " + ex.Message);
 			}
 
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 
 		private void stageAllButton_Click(object sender, RoutedEventArgs e)
@@ -454,14 +454,9 @@ namespace GitGameGUI
 				return;
 			}
 			
-			var commitWindow = new CommitWindow(sender == commitPullPushButton ? CommitWindowTypes.CommitPullPush : CommitWindowTypes.CommitOnly);
+			var commitWindow = new CommitWindow();
 			commitWindow.Owner = MainWindow.singleton;
 			commitWindow.Show();
-		}
-
-		public static void Push()
-		{
-			singleton.pushChangesButton_Click(null, null);
 		}
 
 		private void pushChangesButton_Click(object sender, RoutedEventArgs e)
@@ -498,11 +493,6 @@ namespace GitGameGUI
 			}
 		}
 
-		public static void Pull()
-		{
-			singleton.pullChangesButton_Click(null, null);
-		}
-
 		private void pullChangesButton_Click(object sender, RoutedEventArgs e)
 		{
 			try
@@ -520,16 +510,22 @@ namespace GitGameGUI
 			}
 		}
 
+		private void syncChangesButton_Click(object sender, RoutedEventArgs e)
+		{
+			pullChangesButton_Click(null, null);
+			if (RepoUserControl.repo.Index.Conflicts.Count() == 0) pushChangesButton_Click(null, null);
+		}
+
 		public static void ResolveConflicts()
 		{
 			// update ui before issue check
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 
 			// check for merge issues and invoke resolve
 			if (RepoUserControl.repo.Index.Conflicts.Count() != 0) singleton.resolveAllButton_Click(null, null);
 
 			// update ui after issue check
-			MainWindow.UpdateUI();
+			RepoUserControl.Refresh();
 		}
 
 		private async Task<bool> resolveChange(FileItem item)
@@ -639,7 +635,7 @@ namespace GitGameGUI
 			if (File.Exists(fullPath + ".theirs")) File.Delete(fullPath + ".theirs");
 
 			// check if user accepts the current state of the merge
-			if (MessageBox.Show("No changes detected. Accept as merged?", "Accept Merge?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			if (!wasModified && MessageBox.Show("No changes detected. Accept as merged?", "Accept Merge?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
 				RepoUserControl.repo.Stage(item.filename);
 				wasModified = true;
