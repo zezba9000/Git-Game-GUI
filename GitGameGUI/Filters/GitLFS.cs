@@ -18,6 +18,12 @@ namespace GitGameGUI.Filters
 
 		protected override void Clean(string path, string root, Stream input, Stream output)
 		{
+			if (!RepoUserControl.repoSettings.lfsSupport)
+			{
+				base.Clean(path, root, input, output);
+				return;
+			}
+
 			try
 			{
 				// write all file data to stdin
@@ -32,6 +38,12 @@ namespace GitGameGUI.Filters
 
 		protected override void Complete(string path, string root, Stream output)
 		{
+			if (!RepoUserControl.repoSettings.lfsSupport)
+			{
+				base.Complete(path, root, output);
+				return;
+			}
+
 			try
 			{
 				// finalize stdin and wait for git-lfs to finish
@@ -70,8 +82,13 @@ namespace GitGameGUI.Filters
 
 		protected override void Create(string path, string root, FilterMode mode)
 		{
-			this.mode = mode;
+			if (!RepoUserControl.repoSettings.lfsSupport)
+			{
+				base.Create(path, root, mode);
+				return;
+			}
 
+			this.mode = mode;
 			try
 			{
 				// launch git-lfs
@@ -100,6 +117,12 @@ namespace GitGameGUI.Filters
 
 		protected override void Smudge(string path, string root, Stream input, Stream output)
 		{
+			if (!RepoUserControl.repoSettings.lfsSupport)
+			{
+				base.Smudge(path, root, input, output);
+				return;
+			}
+
 			try
 			{
 				// write git-lfs pointer to stdin

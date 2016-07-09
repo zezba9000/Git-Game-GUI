@@ -463,7 +463,7 @@ namespace GitGameGUI
 				return;
 			}
 
-			if (MessageBox.Show(string.Format("Are you sure you want to add ext: {0}\nThis is permanent!", gitLFSExtTextBox.Text), "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			if (MessageBox.Show(string.Format("Are you sure you want to add Git-LFS ext: '{0}'", gitLFSExtTextBox.Text), "Warning", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
 			{
 				return;
 			}

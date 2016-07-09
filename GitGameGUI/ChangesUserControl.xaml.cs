@@ -184,6 +184,8 @@ namespace GitGameGUI
 
 		private void RefreshQuickView(ListView listView)
 		{
+			diffTextBoxScrollViewer.ScrollToHome();
+
 			try
 			{
 				foreach (var item in RepoUserControl.repo.RetrieveStatus())
@@ -220,8 +222,7 @@ namespace GitGameGUI
 
 					// check if binary file
 					var file = RepoUserControl.repo.Index[item.FilePath];
-					var fileID = file.Id;
-					var blob = RepoUserControl.repo.Lookup<Blob>(fileID);
+					var blob = RepoUserControl.repo.Lookup<Blob>(file.Id);
 					if (blob.IsBinary || Tools.IsBinaryFileData(fullPath))
 					{
 						diffTextBox.Text = "<< Binary File >>";
@@ -231,10 +232,31 @@ namespace GitGameGUI
 					// check for text types
 					if ((state & FileStatus.ModifiedInWorkdir) != 0)
 					{
+						//var patch = RepoUserControl.repo.Diff.Compare<TreeChanges>(new List<string>(){item.FilePath});// use this for details about change
 						var patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>(){item.FilePath});
-						var match = Regex.Match(patch.Content, @"@@.*@@\n(.*)", RegexOptions.Singleline);
-						if (match.Success && match.Groups.Count == 2) diffTextBox.Text = match.Groups[1].Value.Replace("\\ No newline at end of file\n", "");
-						else diffTextBox.Text = patch.Content;
+
+						string content = patch.Content;
+
+						var match = Regex.Match(content, @"@@.*?(@@).*?\n(.*)", RegexOptions.Singleline);
+						if (match.Success && match.Groups.Count == 3) content = match.Groups[2].Value.Replace("\\ No newline at end of file\n", "");
+
+						// remove meta data stage 2
+						bool search = true;
+						while (search)
+						{
+							patch = RepoUserControl.repo.Diff.Compare<Patch>(new List<string>() { item.FilePath });
+							match = Regex.Match(content, @"(@@.*?(@@).*?\n)", RegexOptions.Singleline);
+							if (match.Success && match.Groups.Count == 3)
+							{
+								content = content.Replace(match.Groups[1].Value, Environment.NewLine + "<<< ----------- SECTION ----------- >>>" + Environment.NewLine);
+							}
+							else
+							{
+								search = false;
+							}
+						}
+
+						diffTextBox.Text = content;
 						return;
 					}
 					else if ((state & FileStatus.ModifiedInIndex) != 0 ||

@@ -5,43 +5,38 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GitGameGUI"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="800">
+             d:DesignHeight="800" d:DesignWidth="1280">
 
 	<Grid Background="DarkGray">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="75*" />
-			<RowDefinition Height="25*" />
-		</Grid.RowDefinitions>
+		<Grid>
+			<ComboBox x:Name="activeRepoComboBox" Margin="0,41,0,0" Width="512" HorizontalAlignment="Center" VerticalAlignment="Top" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
+			<Label x:Name="label" Content="-- Active Repository --" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top"/>
+			<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Center" Margin="0,68,140,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>
+			<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Center" Margin="140,68,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
 
-		<Grid Grid.Row="0">
-			<ComboBox x:Name="activeRepoComboBox" Margin="119,10,10,0" VerticalAlignment="Top" SelectionChanged="activeRepoComboBox_SelectionChanged"/>
-			<Label x:Name="label" Content="Active Repository:" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-			<Button x:Name="openRepoButton" Content="Open Repository" HorizontalAlignment="Left" Margin="119,37,0,0" VerticalAlignment="Top" Width="120" Click="openRepoButton_Click"/>
-			<Button x:Name="clearRepoListButton" Content="Clear Repo List" HorizontalAlignment="Left" Margin="119,62,0,0" VerticalAlignment="Top" Width="120" Click="clearRepoListButton_Click"/>
+			<Label Content="-- URL --" HorizontalAlignment="Center" Margin="0,120,0,0" VerticalAlignment="Top"/>
+			<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Center" Margin="0,179,140,0" VerticalAlignment="Top" Width="120" Click="cloneButton_Click"/>
+			<Button x:Name="createButton" Content="Create New" HorizontalAlignment="Center" Margin="140,179,0,0" VerticalAlignment="Top" Width="120" Click="createButton_Click"/>
+			<TextBox x:Name="repoURLTextBox" Height="23" Width="512" Margin="0,151,0,0" TextWrapping="Wrap" Text="" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
-			<Label Content="URL:" HorizontalAlignment="Left" Margin="80,131,0,0" VerticalAlignment="Top"/>
-			<Button x:Name="cloneButton" Content="Clone" HorizontalAlignment="Left" Margin="119,159,0,0" VerticalAlignment="Top" Width="120" Click="cloneButton_Click"/>
-			<Button x:Name="createButton" Content="Create New" HorizontalAlignment="Left" Margin="119,184,0,0" VerticalAlignment="Top" Width="120" Click="createButton_Click"/>
-			<TextBox x:Name="repoURLTextBox" Height="23" Margin="119,131,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-
-			<Label Content=": User Signature Name" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,91" VerticalAlignment="Bottom"/>
-			<Label Content=": User Signature Email" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,63" VerticalAlignment="Bottom"/>
-			<Label Content=": User Repository Username" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,35" VerticalAlignment="Bottom"/>
-			<Label Content=": User Repository Password" HorizontalContentAlignment="Left" HorizontalAlignment="Left" Margin="244,0,0,7" VerticalAlignment="Bottom"/>
-			<TextBox x:Name="sigNameTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,94" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="sigNameTextBox_TextChanged"/>
-			<TextBox x:Name="sigEmailTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,66" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="sigEmailTextBox_TextChanged"/>
-			<TextBox x:Name="usernameTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,38" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="usernameTextBox_TextChanged"/>
-			<PasswordBox x:Name="passTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,10" Password="" VerticalAlignment="Bottom" Width="229" PasswordChanged="passTextBox_PasswordChanged"/>
+			<Label Content="-- Signature Name --" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,215" VerticalAlignment="Bottom" Width="228"/>
+			<Label Content="-- Signature Email --" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,156" VerticalAlignment="Bottom" Width="228"/>
+			<Label Content="-- Repository Username --" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,97" VerticalAlignment="Bottom" Width="228"/>
+			<Label Content="-- Repository Password --" HorizontalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,38" Width="228"/>
+			<TextBox x:Name="sigNameTextBox" HorizontalAlignment="Center" Height="23" Margin="0,0,0,187" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="sigNameTextBox_TextChanged"/>
+			<TextBox x:Name="sigEmailTextBox" HorizontalAlignment="Center" Height="23" Margin="0,0,0,128" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="sigEmailTextBox_TextChanged"/>
+			<TextBox x:Name="usernameTextBox" HorizontalAlignment="Center" Height="23" Margin="0,0,0,69" Text="" VerticalAlignment="Bottom" Width="229" TextChanged="usernameTextBox_TextChanged"/>
+			<PasswordBox x:Name="passTextBox" HorizontalAlignment="Center" VerticalAlignment="Bottom" Height="23" Margin="0,0,0,10" Password="" Width="229" PasswordChanged="passTextBox_PasswordChanged"/>
 		</Grid>
 
-		<Grid Grid.Row="1">
+		<Grid>
 			<CheckBox x:Name="gitLFSSupportCheckBox" Content="Git-LFS Support" HorizontalAlignment="Left" Margin="10,0,0,83" VerticalAlignment="Bottom" Checked="gitLFSSupportCheckBox_Checked" Unchecked="gitLFSSupportCheckBox_Checked"/>
 			<CheckBox x:Name="gitignoreExistsCheckBox" Content="Validate .gitignore file exists" HorizontalAlignment="Left" Margin="10,0,0,63" VerticalAlignment="Bottom" Checked="gitignoreExistsCheckBox_Checked" Unchecked="gitignoreExistsCheckBox_Checked"/>
 
-			<Button x:Name="addGitLFSExtButton" Content="Add Git-LFS Ext to active repo" HorizontalAlignment="Left" Margin="10,0,0,38" VerticalAlignment="Bottom" Width="214" Click="addGitLFSExtButton_Click"/>
-			<TextBox x:Name="gitLFSExtTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,10" TextWrapping="Wrap" Text=".ext" VerticalAlignment="Bottom" Width="214"/>
+			<Button x:Name="addGitLFSExtButton" Content="Add Git-LFS Ext to active repo" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="214" Click="addGitLFSExtButton_Click"/>
+			<TextBox x:Name="gitLFSExtTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,35" TextWrapping="Wrap" Text=".ext" VerticalAlignment="Bottom" Width="214"/>
 
-			<Label Content="Merge Diff Tool" HorizontalContentAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,40" VerticalAlignment="Bottom" Width="120"/>
+			<Label Content="-- Merge Diff Too --" HorizontalContentAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,37" VerticalAlignment="Bottom" Width="120"/>
 			<ComboBox x:Name="mergeDiffToolComboBox" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="120" SelectionChanged="mergeDiffToolComboBox_SelectionChanged">
 				<ComboBoxItem>Meld</ComboBoxItem>
 				<ComboBoxItem>kDiff3</ComboBoxItem>
