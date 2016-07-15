@@ -256,7 +256,7 @@ namespace GitGameGUI
 					Tools.RunExe("git-lfs", string.Format("track \"*{0}\"", ext), null);
 				}
 			}
-
+			
 			return true;
 		}
 
@@ -414,7 +414,7 @@ namespace GitGameGUI
 				try
 				{
 					repoSettings.lfsSupport = false;
-					Tools.RunExe("git-lfs", "uninit", null);
+					Tools.RunExe("git-lfs", "uninstall", null);
 					if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
 					if (Directory.Exists(repoPath + "\\.git\\lfs")) Directory.Delete(repoPath + "\\.git\\lfs", true);
 				}

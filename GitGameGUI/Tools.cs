@@ -65,8 +65,8 @@ namespace GitGameGUI
 			process.StartInfo.Arguments = arguments;
 			process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
 			process.StartInfo.RedirectStandardInput = input != null;
-			process.StartInfo.CreateNoWindow = hideWindow;
 			process.StartInfo.UseShellExecute = false;
+			process.StartInfo.CreateNoWindow = hideWindow;
 			process.Start();
 			if (input != null)
 			{
@@ -85,8 +85,8 @@ namespace GitGameGUI
 			process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
 			process.StartInfo.RedirectStandardInput = input != null;
 			process.StartInfo.RedirectStandardOutput = true;
-			process.StartInfo.CreateNoWindow = hideWindow;
 			process.StartInfo.UseShellExecute = false;
+			process.StartInfo.CreateNoWindow = hideWindow;
 			process.Start();
 			if (input != null)
 			{
