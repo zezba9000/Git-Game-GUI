@@ -1,12 +1,5 @@
 Binary Merge tool show show image diff (so you know what you want to select)
 Show binary images in quick preview.
 
-Fix git-lfs checkbox bugs.
-Git remove should delete file '.git\hooks\pre-push'
-
-Add branches without origin tracking option.
-Validate Git-LFS operation etc.
-Right-Click menu for revert file change.
-
 More UI clean up.
 Test and test

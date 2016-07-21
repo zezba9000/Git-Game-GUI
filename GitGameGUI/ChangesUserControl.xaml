@@ -18,6 +18,7 @@
 						<ContextMenu>
 							<MenuItem Header="Open file" Click="openFile_Click"/>
 							<MenuItem Header="Open file location" Click="openFileLocation_Click"/>
+							<MenuItem Header="Revert file" Click="revertFile_Click"/>
 						</ContextMenu>
 					</TextBlock.ContextMenu>
 				</TextBlock>

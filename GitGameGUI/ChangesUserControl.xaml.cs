@@ -717,7 +717,8 @@ namespace GitGameGUI
 				// get selected item
 				var item = unstagedChangesListView.SelectedItem as FileItem;
 				if (item == null) item = stagedChangesListView.SelectedItem as FileItem;
-				if ((RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.ModifiedInIndex) == 0 && (RepoUserControl.repo.RetrieveStatus(item.filename) & FileStatus.ModifiedInWorkdir) == 0)
+				var status = RepoUserControl.repo.RetrieveStatus(item.filename);
+				if ((status & FileStatus.ModifiedInIndex) == 0 && (status & FileStatus.ModifiedInWorkdir) == 0)
 				{
 					MessageBox.Show("This file is not modified");
 					return;
@@ -795,6 +796,49 @@ namespace GitGameGUI
 			{
 				MessageBox.Show("Failed to open folder location: " + ex.Message);
 			}
+		}
+
+		private void revertFile_Click(object sender, RoutedEventArgs e)
+		{
+			// check for common mistakes
+			if (stagedChangesListView.SelectedIndex >= 0)
+			{
+				MessageBox.Show("Unstage file before reverting!");
+				return;
+			}
+
+			if (unstagedChangesListView.SelectedIndex < 0)
+			{
+				MessageBox.Show("No unstaged file selected");
+				return;
+			}
+
+			var item = unstagedChangesListView.SelectedItem as FileItem;
+			if (MessageBox.Show(string.Format("Are you sure you want to revert file '{0}'?", item.filename), "Revert?", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+			{
+				return;
+			}
+
+			try
+			{
+				// get selected item
+				var status = RepoUserControl.repo.RetrieveStatus(item.filename);
+				if ((status & FileStatus.ModifiedInIndex) == 0 && (status & FileStatus.ModifiedInWorkdir) == 0 && (status & FileStatus.DeletedFromIndex) == 0 && (status & FileStatus.DeletedFromWorkdir) == 0)
+				{
+					MessageBox.Show("This file is not modified or deleted");
+					return;
+				}
+				
+				var options = new CheckoutOptions();
+				options.CheckoutModifiers = CheckoutModifiers.Force;
+				RepoUserControl.repo.CheckoutPaths(RepoUserControl.repo.Head.FriendlyName, new string[] {item.filename}, options);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to open folder location: " + ex.Message);
+			}
+
+			RepoUserControl.Refresh();
 		}
 	}
 }

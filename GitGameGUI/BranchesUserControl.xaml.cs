@@ -189,14 +189,25 @@ namespace GitGameGUI
 				return;
 			}
 
+			// see if the user wants to add remote info
+			bool addRemoteInfo = false;
+			if (MessageBox.Show("Will this branch be pushed to a remote server?", "Remote Tracking?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			{
+				addRemoteInfo = true;
+			}
+
 			try
 			{
 				var branch = RepoUserControl.repo.CreateBranch(branchNameTextBox.Text);
-				RepoUserControl.repo.Branches.Update(branch, b =>
+				if (addRemoteInfo)
 				{
-					b.Remote = "origin";
-					b.UpstreamBranch = branch.CanonicalName;
-				});
+					RepoUserControl.repo.Branches.Update(branch, b =>
+					{
+						b.Remote = "origin";
+						b.UpstreamBranch = branch.CanonicalName;
+					});
+				}
+
 				activeBranchComboBox.Items.Add(branchNameTextBox.Text);
 			}
 			catch (Exception ex)
@@ -205,6 +216,7 @@ namespace GitGameGUI
 				return;
 			}
 
+			RepoUserControl.Refresh();
 			if (activeBranchComboBox.Items.Count != 0) activeBranchComboBox.SelectedIndex = activeBranchComboBox.Items.Count - 1;
 		}
 

@@ -133,7 +133,9 @@ namespace GitGameGUI
 
 					// load repo settings
 					repoSettings = Settings.Load<XML.RepoSettings>(repoPath + "\\.gitgamegui");
+					singleton.gitLFSSupportCheckBoxSkip = true;
 					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.lfsSupport;
+					singleton.gitLFSSupportCheckBoxSkip = false;
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
 					singleton.sigNameTextBox.Text = repoSettings.signatureName;
 					singleton.sigEmailTextBox.Text = repoSettings.signatureEmail;
@@ -229,6 +231,7 @@ namespace GitGameGUI
 			{
 				gitLFSSupportCheckBoxSkip = true;
 				gitLFSSupportCheckBox.IsChecked = false;
+				gitLFSSupportCheckBoxSkip = false;
 				return false;
 			}
 
@@ -241,12 +244,25 @@ namespace GitGameGUI
 					repoSettings.lfsSupport = false;
 					gitLFSSupportCheckBoxSkip = true;
 					gitLFSSupportCheckBox.IsChecked = false;
+					gitLFSSupportCheckBoxSkip = false;
 					return false;
 				}
 			}
 
 			// init git lfs
-			if (!Directory.Exists(repoPath + "\\.git\\lfs")) Tools.RunExe("git-lfs", "install", null);
+			if (!Directory.Exists(repoPath + "\\.git\\lfs"))
+			{
+				Tools.RunExe("git-lfs", "install", null);
+				if (!Directory.Exists(repoPath + "\\.git\\lfs"))
+				{
+					MessageBox.Show("Git-LFS install failed! (Try manually)");
+					repoSettings.lfsSupport = false;
+					gitLFSSupportCheckBoxSkip = true;
+					gitLFSSupportCheckBox.IsChecked = false;
+					gitLFSSupportCheckBoxSkip = false;
+					return false;
+				}
+			}
 
 			// add default ext to git lfs
 			if (!File.Exists(repoPath + "\\.gitattributes") && MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
@@ -254,6 +270,11 @@ namespace GitGameGUI
 				foreach (string ext in MainWindow.appSettings.defaultGitLFS_Exts)
 				{
 					Tools.RunExe("git-lfs", string.Format("track \"*{0}\"", ext), null);
+				}
+
+				if (!File.Exists(repoPath + "\\.gitattributes"))
+				{
+					MessageBox.Show("Git-LFS track .ext(s) failed! (.gitattributes doesn't exist)");
 				}
 			}
 			
@@ -416,6 +437,7 @@ namespace GitGameGUI
 					repoSettings.lfsSupport = false;
 					Tools.RunExe("git-lfs", "uninstall", null);
 					if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
+					if (File.Exists(repoPath + "\\.git\\hooks\\pre-push")) File.Delete(repoPath + "\\.git\\hooks\\pre-push");
 					if (Directory.Exists(repoPath + "\\.git\\lfs")) Directory.Delete(repoPath + "\\.git\\lfs", true);
 				}
 				catch (Exception ex)
