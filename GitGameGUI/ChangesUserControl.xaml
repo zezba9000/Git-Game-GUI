@@ -50,12 +50,12 @@
 					<Button x:Name="stageAllButton" Content="Stage All" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="stageAllButton_Click"/>
 					<Button x:Name="resolveSelectedButton" Content="Resolve Sel" HorizontalAlignment="Right" Margin="0,10,90,0" VerticalAlignment="Top" Width="75" Click="resolveSelectedButton_Click"/>
 					<Button x:Name="resolveAllButton" Content="Resolve All" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="75" Click="resolveAllButton_Click"/>
-					<ListView Name="unstagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" Margin="10,35,10,10" SelectionChanged="unstagedChangesListView_SelectionChanged"/>
+					<ListView Name="unstagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" Margin="10,35,10,10" SelectionMode="Single" SelectionChanged="unstagedChangesListView_SelectionChanged"/>
 				</Grid>
 
 				<Grid Grid.Row="1">
 					<Button x:Name="unstageAllButton" Content="Unstage All" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="unstageAllButton_Click"/>
-					<ListView Name="stagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" Margin="10,35,10,10" SelectionChanged="stagedChangesListView_SelectionChanged"/>
+					<ListView Name="stagedChangesListView" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ListViewTemplate}" Margin="10,35,10,10" SelectionMode="Single" SelectionChanged="stagedChangesListView_SelectionChanged"/>
 				</Grid>
 			</Grid>
 
