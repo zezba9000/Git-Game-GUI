@@ -62,6 +62,8 @@ namespace GitGameGUI
 				var repoStatus = RepoUserControl.repo.RetrieveStatus();
 				foreach (var fileStatus in repoStatus)
 				{
+					if (fileStatus.FilePath == Settings.RepoUserFilename) continue;
+
 					changesFound = true;
 					bool stateHandled = false;
 					var state = fileStatus.State;
