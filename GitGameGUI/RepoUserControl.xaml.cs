@@ -17,6 +17,7 @@ namespace GitGameGUI
 		public static Signature signature;
 		public static UsernamePasswordCredentials credentials;
 		public static XML.RepoSettings repoSettings;
+		public static XML.RepoUserSettings repoUserSettings;
 		public static string mergeToolPath;
 		bool canTriggerRepoChange = true;
 
@@ -73,7 +74,8 @@ namespace GitGameGUI
 			if (repo != null)
 			{
 				// save gui settings
-				Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
+				Settings.Save<XML.RepoSettings>(repoPath + "\\" + Settings.RepoFilename, repoSettings);
+				Settings.Save<XML.RepoUserSettings>(repoPath + "\\" + Settings.RepoUserFilename, repoUserSettings);
 
 				// save repo settings
 				var origin = repo.Network.Remotes["origin"];
@@ -132,15 +134,16 @@ namespace GitGameGUI
 					}
 
 					// load repo settings
-					repoSettings = Settings.Load<XML.RepoSettings>(repoPath + "\\.gitgamegui");
+					repoSettings = Settings.Load<XML.RepoSettings>(repoPath + "\\" + Settings.RepoFilename);
+					repoUserSettings = Settings.Load<XML.RepoUserSettings>(repoPath + "\\" + Settings.RepoUserFilename);
 					singleton.gitLFSSupportCheckBoxSkip = true;
 					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.lfsSupport;
 					singleton.gitLFSSupportCheckBoxSkip = false;
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
-					singleton.sigNameTextBox.Text = repoSettings.signatureName;
-					singleton.sigEmailTextBox.Text = repoSettings.signatureEmail;
-					singleton.usernameTextBox.Text = repoSettings.username;
-					singleton.passTextBox.Password = repoSettings.password;
+					singleton.sigNameTextBox.Text = repoUserSettings.signatureName;
+					singleton.sigEmailTextBox.Text = repoUserSettings.signatureEmail;
+					singleton.usernameTextBox.Text = repoUserSettings.username;
+					singleton.passTextBox.Password = repoUserSettings.password;
 
 					// check for lfs
 					singleton.CheckGitLFS();
@@ -155,13 +158,13 @@ namespace GitGameGUI
 					}
 
 					// create signature
-					signature = new Signature(repoSettings.signatureName, repoSettings.signatureEmail, DateTimeOffset.UtcNow);
+					signature = new Signature(repoUserSettings.signatureName, repoUserSettings.signatureEmail, DateTimeOffset.UtcNow);
 
 					// create credentials
 					credentials = new UsernamePasswordCredentials
 					{
-						Username = repoSettings.username,
-						Password = repoSettings.password
+						Username = repoUserSettings.username,
+						Password = repoUserSettings.password
 					};
 
 					// trim repository list
@@ -196,7 +199,8 @@ namespace GitGameGUI
 						singleton.activeRepoComboBox.Items.Insert(0, repoPath);
 					}
 
-					if (!File.Exists(repoPath + "\\.gitgamegui")) Settings.Save<XML.RepoSettings>(repoPath + "\\.gitgamegui", repoSettings);
+					if (!File.Exists(repoPath + "\\" + Settings.RepoFilename)) Settings.Save<XML.RepoSettings>(repoPath + "\\" + Settings.RepoFilename, repoSettings);
+					if (!File.Exists(repoPath + "\\" + Settings.RepoUserFilename)) Settings.Save<XML.RepoUserSettings>(repoPath + "\\" + Settings.RepoUserFilename, repoUserSettings);
 				}
 			}
 			catch (Exception e)
@@ -454,25 +458,25 @@ namespace GitGameGUI
 
 		private void sigNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (repoSettings != null || MainWindow.uiUpdating) repoSettings.signatureName = sigNameTextBox.Text;
+			if (repoUserSettings != null || MainWindow.uiUpdating) repoUserSettings.signatureName = sigNameTextBox.Text;
 		}
 
 		private void sigEmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			if (repoSettings != null || MainWindow.uiUpdating) repoSettings.signatureEmail = sigEmailTextBox.Text;
+			if (repoUserSettings != null || MainWindow.uiUpdating) repoUserSettings.signatureEmail = sigEmailTextBox.Text;
 		}
 
 		private void usernameTextBox_TextChanged(object sender, TextChangedEventArgs e)
 		{
 			if (MainWindow.uiUpdating) return;
-			if (repoSettings != null) repoSettings.username = usernameTextBox.Text;
+			if (repoUserSettings != null) repoUserSettings.username = usernameTextBox.Text;
 			if (credentials != null) credentials.Username = usernameTextBox.Text;
 		}
 
 		private void passTextBox_PasswordChanged(object sender, RoutedEventArgs e)
 		{
 			if (MainWindow.uiUpdating) return;
-			if (repoSettings != null) repoSettings.password = passTextBox.Password;
+			if (repoUserSettings != null) repoUserSettings.password = passTextBox.Password;
 			if (credentials != null) credentials.Password = passTextBox.Password;
 		}
 

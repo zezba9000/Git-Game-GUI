@@ -459,8 +459,10 @@ namespace GitGameGUI
 			commitWindow.Show();
 		}
 
+		private bool pushChangesButton_Click_Succeeded;
 		private void pushChangesButton_Click(object sender, RoutedEventArgs e)
 		{
+			pushChangesButton_Click_Succeeded = false;
 			try
 			{
 				// pre push git lfs file data
@@ -481,6 +483,7 @@ namespace GitGameGUI
 					process.WaitForExit();
 
 					Console.WriteLine(process.StandardOutput.ReadToEnd());
+					pushChangesButton_Click_Succeeded = true;
 				}
 				
 				var options = new PushOptions();
@@ -513,7 +516,7 @@ namespace GitGameGUI
 		private void syncChangesButton_Click(object sender, RoutedEventArgs e)
 		{
 			pullChangesButton_Click(null, null);
-			if (RepoUserControl.repo.Index.Conflicts.Count() == 0) pushChangesButton_Click(null, null);
+			if (pushChangesButton_Click_Succeeded && RepoUserControl.repo.Index.Conflicts.Count() == 0) pushChangesButton_Click(null, null);
 		}
 
 		public static void ResolveConflicts()

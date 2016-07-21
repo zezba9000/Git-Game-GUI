@@ -25,17 +25,26 @@ namespace GitGameGUI
 		[XmlRoot("RepoSettings")]
 		public class RepoSettings
 		{
+			[XmlAttribute("LFSSupport")] public bool lfsSupport = true;
+			[XmlAttribute("ValidateGitignore")] public bool validateGitignore = true;
+		}
+
+		[XmlRoot("RepoUserSettings")]
+		public class RepoUserSettings
+		{
 			[XmlAttribute("SignatureName")] public string signatureName = "First Last";
 			[XmlAttribute("SignatureEmail")] public string signatureEmail = "username@email.com";
 			[XmlAttribute("Username")] public string username = "Username";
 			[XmlAttribute("Password")] public string password = "password";
-			[XmlAttribute("LFSSupport")] public bool lfsSupport = true;
-			[XmlAttribute("ValidateGitignore")] public bool validateGitignore = true;
 		}
 	}
 
 	static class Settings
 	{
+		public const string GuiFilename = "Settings.xml";
+		public const string RepoFilename = ".gitgamegui";
+		public const string RepoUserFilename = ".gitgamegui-user";
+
 		public static T Load<T>(string filename) where T : new()
 		{
 			if (!File.Exists(filename)) return new T();

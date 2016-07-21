@@ -12,8 +12,8 @@
 		<self:FileItem x:Key="FileItem"/>
 		<DataTemplate x:Key="ListViewTemplate">
 			<StackPanel Orientation="Horizontal">
-				<Image Source="{Binding Path=Icon}" Width="16" Height="16" MouseDown="FileItemImage_MouseDown"/>
-				<TextBlock Text="{Binding Path=Filename}" VerticalAlignment="Center" ContextMenuService.ShowOnDisabled="True">
+				<Image Source="{Binding Path=Icon}" Width="24" Height="24" MouseDown="FileItemImage_MouseDown"/>
+				<TextBlock Text="{Binding Path=Filename}" VerticalAlignment="Center" ContextMenuService.ShowOnDisabled="True" Padding="5,0">
 					<TextBlock.ContextMenu>
 						<ContextMenu>
 							<MenuItem Header="Open file" Click="openFile_Click"/>

@@ -23,7 +23,7 @@ namespace GitGameGUI
 			InitializeComponent();
 
 			// load settings
-			appSettings = Settings.Load<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\Settings.xml");
+			appSettings = Settings.Load<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\" + Settings.GuiFilename);
 			if (appSettings.defaultGitLFS_Exts.Count == 0)
 			{
 				appSettings.defaultGitLFS_Exts.AddRange(new List<string>()
@@ -58,7 +58,7 @@ namespace GitGameGUI
 		protected override void OnClosing(CancelEventArgs e)
 		{
 			RepoUserControl.Dispose();
-			Settings.Save<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\Settings.xml", appSettings);
+			Settings.Save<XML.AppSettings>(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\GitGameGUI\\" + Settings.GuiFilename, appSettings);
 			base.OnClosing(e);
 		}
 

@@ -212,7 +212,7 @@ namespace GitGameGUI
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+				MessageBox.Show("Add new Branch Error: " + ex.Message);
 				return;
 			}
 
@@ -241,7 +241,7 @@ namespace GitGameGUI
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+				MessageBox.Show("Delete new Branch Error: " + ex.Message);
 			}
 
 			RepoUserControl.Refresh();
@@ -284,7 +284,7 @@ namespace GitGameGUI
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Create mew Branch Error: " + ex.Message);
+				MessageBox.Show("Rename new Branch Error: " + ex.Message);
 			}
 
 			RepoUserControl.Refresh();
