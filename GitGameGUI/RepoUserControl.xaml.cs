@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -103,7 +104,7 @@ namespace GitGameGUI
 			OpenRepo(repoPath);
 		}
 		
-		public static void OpenRepo(string repoPath)
+		public static void OpenRepo(string repoPath, bool useExistingUserPass = false)
 		{
 			MainWindow.uiUpdating = true;
 
@@ -140,13 +141,43 @@ namespace GitGameGUI
 					singleton.gitLFSSupportCheckBox.IsChecked = repoSettings.lfsSupport;
 					singleton.gitLFSSupportCheckBoxSkip = false;
 					singleton.gitignoreExistsCheckBox.IsChecked = repoSettings.validateGitignore;
-					singleton.sigNameTextBox.Text = repoUserSettings.signatureName;
-					singleton.sigEmailTextBox.Text = repoUserSettings.signatureEmail;
-					singleton.usernameTextBox.Text = repoUserSettings.username;
-					singleton.passTextBox.Password = repoUserSettings.password;
+					if (useExistingUserPass)
+					{
+						repoUserSettings.signatureName = singleton.sigNameTextBox.Text;
+						repoUserSettings.signatureEmail = singleton.sigEmailTextBox.Text;
+						repoUserSettings.username = singleton.usernameTextBox.Text;
+						repoUserSettings.password = singleton.passTextBox.Password;
+					}
+					else
+					{
+						singleton.sigNameTextBox.Text = repoUserSettings.signatureName;
+						singleton.sigEmailTextBox.Text = repoUserSettings.signatureEmail;
+						singleton.usernameTextBox.Text = repoUserSettings.username;
+						singleton.passTextBox.Password = repoUserSettings.password;
+					}
+
+					// make sure git-lfs is installed
+					if (repoSettings.lfsSupport && !CheckUpdatesWindow.gitlfsInstalled)
+					{
+						MessageBox.Show("Git-LFS is not installed and is required for this repo.");
+
+						// dispose current
+						signature = null;
+						credentials = null;
+						RepoUserControl.repoPath = null;
+						if (repo != null)
+						{
+							repo.Dispose();
+							repo = null;
+						}
+
+						MainWindow.uiUpdating = false;
+						MainWindow.UpdateUI();
+						return;
+					}
 
 					// check for lfs
-					singleton.CheckGitLFS();
+					singleton.CheckGitLFS(false);
 
 					// check for .gitignore file
 					if (repoSettings.validateGitignore)
@@ -228,8 +259,18 @@ namespace GitGameGUI
 			MainWindow.UpdateUI();
 		}
 
-		private bool CheckGitLFS()
+		private bool CheckGitLFS(bool forceAttrCheck, bool notInstalledDefaultValue = false)
 		{
+			if (repoSettings.lfsSupport && !CheckUpdatesWindow.gitlfsInstalled)
+			{
+				MessageBox.Show("Git-LFS is not installed.");
+				gitLFSSupportCheckBoxSkip = true;
+				repoSettings.lfsSupport = notInstalledDefaultValue;
+				gitLFSSupportCheckBox.IsChecked = notInstalledDefaultValue;
+				gitLFSSupportCheckBoxSkip = false;
+				return false;
+			}
+
 			// make sure the user wants this check
 			if (!repoSettings.lfsSupport)
 			{
@@ -269,7 +310,7 @@ namespace GitGameGUI
 			}
 
 			// add default ext to git lfs
-			if (!File.Exists(repoPath + "\\.gitattributes") && MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			if ((!File.Exists(repoPath + "\\.gitattributes") || forceAttrCheck) && MessageBox.Show("Do you want to add Git-Game-GUI Git-LFS ext types?", "Git-LFS Ext?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 			{
 				foreach (string ext in MainWindow.appSettings.defaultGitLFS_Exts)
 				{
@@ -279,6 +320,14 @@ namespace GitGameGUI
 				if (!File.Exists(repoPath + "\\.gitattributes"))
 				{
 					MessageBox.Show("Git-LFS track .ext(s) failed! (.gitattributes doesn't exist)");
+				}
+			}
+
+			if (!File.Exists(repoPath + "\\.gitattributes"))
+			{
+				using (var writer = File.CreateText(repoPath + "\\.gitattributes"))
+				{
+					// this will be an empty file...
 				}
 			}
 			
@@ -304,7 +353,7 @@ namespace GitGameGUI
 				{
 					// init git repo
 					Repository.Init(dlg.SelectedPath, false);
-					OpenRepo(dlg.SelectedPath);
+					OpenRepo(dlg.SelectedPath, true);
 					if (!string.IsNullOrEmpty(remoteURL))
 					{
 						repo.Network.Remotes.Add("origin", remoteURL);
@@ -343,7 +392,7 @@ namespace GitGameGUI
 					options.IsBare = false;
 					options.CredentialsProvider = (_url, _user, _cred) => credentials;
 					Repository.Clone(repoURLTextBox.Text, dlg.SelectedPath, options);
-					OpenRepo(dlg.SelectedPath);
+					OpenRepo(dlg.SelectedPath, true);
 				}
 			}
 			catch (Exception ex)
@@ -420,7 +469,7 @@ namespace GitGameGUI
 				try
 				{
 					repoSettings.lfsSupport = true;
-					CheckGitLFS();
+					CheckGitLFS(true, false);
 				}
 				catch (Exception ex)
 				{
@@ -439,10 +488,25 @@ namespace GitGameGUI
 				try
 				{
 					repoSettings.lfsSupport = false;
+
+					// untrack lfs filters
+					if (File.Exists(repoPath + "\\.gitattributes"))
+					{
+						string data = File.ReadAllText(repoPath + "\\.gitattributes");
+						var values = Regex.Matches(data, @"(\*\..*)? filter=lfs diff=lfs merge=lfs");
+						foreach (Match value in values)
+						{
+							if (value.Groups.Count != 2) continue;
+							Tools.RunExe("git-lfs", string.Format("untrack \"{0}\"", value.Groups[1].Value), null);
+						}
+					}
+
+					// remove lfs repo files
 					Tools.RunExe("git-lfs", "uninstall", null);
-					if (File.Exists(repoPath + "\\.gitattributes")) File.Delete(repoPath + "\\.gitattributes");
 					if (File.Exists(repoPath + "\\.git\\hooks\\pre-push")) File.Delete(repoPath + "\\.git\\hooks\\pre-push");
 					if (Directory.Exists(repoPath + "\\.git\\lfs")) Directory.Delete(repoPath + "\\.git\\lfs", true);
+					
+					// TODO: ask user if they want to rebase the repo
 				}
 				catch (Exception ex)
 				{

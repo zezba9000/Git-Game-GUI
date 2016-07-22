@@ -461,53 +461,39 @@ namespace GitGameGUI
 			commitWindow.Show();
 		}
 
-		private bool pushChangesButton_Click_Succeeded;
-		private void pushChangesButton_Click(object sender, RoutedEventArgs e)
+		private void CheckIfBranchHasRemote()
 		{
-			pushChangesButton_Click_Succeeded = false;
-			try
+			var branch = BranchesUserControl.activeBranch;
+			if (branch.Remote == null || string.IsNullOrEmpty(branch.Remote.Url))
 			{
-				// pre push git lfs file data
-				using (var process = new Process())
+				if (MessageBox.Show("This branch does not have remote tracking. Add it now?", "Remote Tracking?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
 				{
-					process.StartInfo.FileName = "git-lfs";
-					process.StartInfo.Arguments = "pre-push origin " + BranchesUserControl.activeBranch.FriendlyName;
-					process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
-					process.StartInfo.CreateNoWindow = true;
-					process.StartInfo.UseShellExecute = false;
-					process.StartInfo.RedirectStandardInput = true;
-					process.StartInfo.RedirectStandardOutput = true;
-					process.Start();
-				
-					process.StandardInput.Write("\0");// needs something/anything written to its stdin (or it wont execute?)
-					process.StandardInput.Flush();
-					process.StandardInput.Close();
-					process.WaitForExit();
-
-					Console.WriteLine(process.StandardOutput.ReadToEnd());
-					pushChangesButton_Click_Succeeded = true;
+					RepoUserControl.repo.Branches.Update(branch, b =>
+					{
+						b.Remote = "origin";
+						b.UpstreamBranch = branch.CanonicalName;
+					});
 				}
-				
-				var options = new PushOptions();
-				options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
-				RepoUserControl.repo.Network.Push(BranchesUserControl.activeBranch, options);
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Failed to push: " + ex.Message);
 			}
 		}
 
+		private bool pullChangesButton_Click_Succeeded;
 		private void pullChangesButton_Click(object sender, RoutedEventArgs e)
 		{
+			pullChangesButton_Click_Succeeded = false;
 			try
 			{
+				CheckIfBranchHasRemote();
+
 				var options = new PullOptions();
 				options.FetchOptions = new FetchOptions();
 				options.FetchOptions.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
 				options.FetchOptions.TagFetchMode = TagFetchMode.All;
 				RepoUserControl.repo.Network.Pull(RepoUserControl.signature, options);
 				ResolveConflicts();
+
+				pullChangesButton_Click_Succeeded = true;
+				if (!isSyncMode) MessageBox.Show(MainWindow.singleton, "Pull Succeeded!");
 			}
 			catch (Exception ex)
 			{
@@ -515,10 +501,70 @@ namespace GitGameGUI
 			}
 		}
 
+		public static void PushNewBranch()
+		{
+			singleton.pushChangesButton_Click(null, null);
+		}
+		
+		private bool pushChangesButton_Click_Succeeded;
+		private void pushChangesButton_Click(object sender, RoutedEventArgs e)
+		{
+			pushChangesButton_Click_Succeeded = false;
+			try
+			{
+				CheckIfBranchHasRemote();
+
+				// pre push git lfs file data
+				if (RepoUserControl.repoSettings.lfsSupport)
+				{
+					using (var process = new Process())
+					{
+						process.StartInfo.FileName = "git-lfs";
+						process.StartInfo.Arguments = "pre-push origin " + BranchesUserControl.activeBranch.FriendlyName;
+						process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+						process.StartInfo.CreateNoWindow = true;
+						process.StartInfo.UseShellExecute = false;
+						process.StartInfo.RedirectStandardInput = true;
+						process.StartInfo.RedirectStandardOutput = true;
+						process.Start();
+				
+						process.StandardInput.Write("\0");// needs something/anything written to its stdin (or it wont execute?)
+						process.StandardInput.Flush();
+						process.StandardInput.Close();
+						process.WaitForExit();
+
+						Console.WriteLine(process.StandardOutput.ReadToEnd());
+					}
+				}
+				
+				var options = new PushOptions();
+				options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
+				bool pushError = false;
+				options.OnPushStatusError = delegate(PushStatusError ex)
+				{
+					MessageBox.Show("Failed to push (do you have valid permisions?): " + ex.Message);
+					pushError = true;
+				};
+				RepoUserControl.repo.Network.Push(BranchesUserControl.activeBranch, options);
+				
+				pushChangesButton_Click_Succeeded = !pushError;
+				if (!isSyncMode && !pushError) MessageBox.Show(MainWindow.singleton, "Push Succeeded!");
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Failed to push: " + ex.Message);
+			}
+		}
+
+		bool isSyncMode = false;
 		private void syncChangesButton_Click(object sender, RoutedEventArgs e)
 		{
+			isSyncMode = true;
 			pullChangesButton_Click(null, null);
-			if (pushChangesButton_Click_Succeeded && RepoUserControl.repo.Index.Conflicts.Count() == 0) pushChangesButton_Click(null, null);
+			if (pullChangesButton_Click_Succeeded && RepoUserControl.repo.Index.Conflicts.Count() == 0) pushChangesButton_Click(null, null);
+			isSyncMode = false;
+
+			if (pullChangesButton_Click_Succeeded && pushChangesButton_Click_Succeeded) MessageBox.Show(MainWindow.singleton, "Sync Succeeded!");
 		}
 
 		public static void ResolveConflicts()

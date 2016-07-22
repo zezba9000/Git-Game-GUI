@@ -28,6 +28,8 @@ namespace GitGameGUI
 
 	public partial class CheckUpdatesWindow : Window
 	{
+		public static bool gitlfsInstalled = false;
+
 		private WebClient client;
 		#if WINDOWS
 		private const string platform = "Windows";
@@ -58,6 +60,7 @@ namespace GitGameGUI
 		protected override void OnClosing(CancelEventArgs e)
 		{
 			MainWindow.CanInteractWithUI(true);
+			MainWindow.UpdateUI();
 			base.OnClosing(e);
 		}
 
@@ -135,23 +138,49 @@ namespace GitGameGUI
 
 			try
 			{
-				// get git and lfs versions
+				// get git and git-lfs version
 				bool canCheckGit = true, canCheckGitLFS = true;
-				string gitVersion = Tools.RunExeOutput("git", "version", null);
-				string gitlfsVersion = Tools.RunExeOutput("git-lfs", "version", null);
+				string gitVersion = null, gitlfsVersion = null;
 				string gitlfsRequiredVersion = "0.0.0.0";
+				try
+				{
+					gitVersion = Tools.RunExeOutput("git", "version", null);
+				}
+				catch
+				{
+					MessageBox.Show("git is not installed correctly. (Make sure git is usable in the cmd/terminal)");
+					client.Dispose();
+					Close();
+					MainWindow.singleton.Close();
+					return;
+				}
+
+				try
+				{
+					gitlfsVersion = Tools.RunExeOutput("git-lfs", "version", null);
+					gitlfsInstalled = true;
+				}
+				catch
+				{
+					//MessageBox.Show("git-lfs is not installed.");
+					canCheckGitLFS = false;
+					gitlfsInstalled = false;
+				}
 
 				var match = Regex.Match(gitVersion, @"git version (.*)\.windows");
 				if (match.Success && match.Groups.Count == 2) gitVersion = match.Groups[1].Value;
 				else canCheckGit = false;
 
-				match = Regex.Match(gitlfsVersion, @"git-lfs/(.*) \(GitHub; windows amd64; go (.*); git ");
-				if (match.Success && match.Groups.Count == 3)
+				if (canCheckGitLFS)
 				{
-					gitlfsVersion = match.Groups[1].Value;
-					gitlfsRequiredVersion = match.Groups[2].Value;
+					match = Regex.Match(gitlfsVersion, @"git-lfs/(.*) \(GitHub; windows amd64; go (.*); git ");
+					if (match.Success && match.Groups.Count == 3)
+					{
+						gitlfsVersion = match.Groups[1].Value;
+						gitlfsRequiredVersion = match.Groups[2].Value;
+					}
+					else canCheckGitLFS = false;
 				}
-				else canCheckGitLFS = false;
 
 				// make sure the git version installed is supporeted by lfs
 				if (!IsValidVersion(gitVersion, gitlfsRequiredVersion))

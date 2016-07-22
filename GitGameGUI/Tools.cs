@@ -187,6 +187,11 @@ namespace GitGameGUI
 
 			if (blob.Size < 1024 && IsGitLFSPtr(blob.GetContentText()))// check if lfs tracked file
 			{
+				if (!RepoUserControl.repoSettings.lfsSupport)
+				{
+					throw new Exception("Critical error: Git-LFS is not installed but repo contains git-lfs pointers!");
+				}
+
 				// get lfs data from ptr
 				using (var process = new Process())
 				{

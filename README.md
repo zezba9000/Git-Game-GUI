@@ -1,16 +1,18 @@
-# Git-Game-GUI
+# Git-Game-GUI (v0.1.0.0)
 
 
 
 - NOTE: This is just in the prototype faze.
 
-- Based on libgit2sharp and writen in C# / WPF (maybe CEF or Eto with coreclr/mono in the future) (TODO)
+- Based on libgit2sharp and writen in C# / WPF (maybe Avalonia with coreclr/mono in the future) (TODO)
 
 - Auto check for .gitignore file
 
 - Auto check for Git-LFS install
 
 - Per project settings saved in .gitgamegui file
+
+- Per project user settings saved in .gitgamegui-user file (don't track)
 
 - Doesn't allow non resolved files to be staged without warning.
 

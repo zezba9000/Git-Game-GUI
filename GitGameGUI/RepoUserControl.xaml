@@ -36,7 +36,7 @@
 			<Button x:Name="addGitLFSExtButton" Content="Add Git-LFS Ext to active repo" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="214" Click="addGitLFSExtButton_Click"/>
 			<TextBox x:Name="gitLFSExtTextBox" HorizontalAlignment="Left" Height="23" Margin="10,0,0,35" TextWrapping="Wrap" Text=".ext" VerticalAlignment="Bottom" Width="214"/>
 
-			<Label Content="-- Merge Diff Too --" HorizontalContentAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,37" VerticalAlignment="Bottom" Width="120"/>
+			<Label Content="-- Merge Diff Tool --" HorizontalContentAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,37" VerticalAlignment="Bottom" Width="120"/>
 			<ComboBox x:Name="mergeDiffToolComboBox" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="120" SelectionChanged="mergeDiffToolComboBox_SelectionChanged">
 				<ComboBoxItem>Meld</ComboBoxItem>
 				<ComboBoxItem>kDiff3</ComboBoxItem>

@@ -155,6 +155,7 @@ namespace GitGameGUI
 			{
 				var srcBround = RepoUserControl.repo.Branches[otherBranchComboBox.SelectedValue as string];
 				RepoUserControl.repo.Merge(srcBround, RepoUserControl.signature);
+				MessageBox.Show("Merge Succeeded!");
 			}
 			catch (Exception ex)
 			{
@@ -209,6 +210,9 @@ namespace GitGameGUI
 				}
 
 				activeBranchComboBox.Items.Add(branchNameTextBox.Text);
+				
+				RepoUserControl.repo.Checkout(branch);
+				activeBranch = branch;
 			}
 			catch (Exception ex)
 			{
@@ -216,8 +220,8 @@ namespace GitGameGUI
 				return;
 			}
 
+			if (addRemoteInfo) ChangesUserControl.PushNewBranch();
 			RepoUserControl.Refresh();
-			if (activeBranchComboBox.Items.Count != 0) activeBranchComboBox.SelectedIndex = activeBranchComboBox.Items.Count - 1;
 		}
 
 		private void deleteBranchButton_Click(object sender, RoutedEventArgs e)
@@ -237,7 +241,11 @@ namespace GitGameGUI
 			{
 				RepoUserControl.repo.Branches.Remove(otherBranchComboBox.Text);
 				var remoteBranch = RepoUserControl.repo.Branches["origin/" + otherBranchComboBox.Text];
-				if (remoteBranch != null) RepoUserControl.repo.Branches.Remove(remoteBranch);
+				if (remoteBranch != null)
+				{
+					RepoUserControl.repo.Branches.Remove(remoteBranch);
+					Tools.RunExe("git", string.Format("push origin --delete {0}", otherBranchComboBox.Text), null);
+				}
 			}
 			catch (Exception ex)
 			{

@@ -35,8 +35,6 @@ namespace GitGameGUI
 					".bin", ".data", ".raw", ".hex",// unknown binary types
 				});
 			}
-			
-			UpdateUI();
 		}
 
 		bool shown = false;
