@@ -18,8 +18,8 @@
 
 - Supports Meld, kDiff3, P4Merge and DiffMerge with no .gitconfig required
 
-- Auto check for external Git-Core and Git-LFS updates (tested locally first)
+- Auto check for external Git and Git-LFS updates (tested locally first)
 
-- gitk for history.
+- gitk for history (maybe something built in later).
 
 - UI Cleanup (TODO)
