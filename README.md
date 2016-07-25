@@ -4,7 +4,7 @@
 
 - NOTE: This is just in the prototype faze.
 
-- Based on libgit2sharp and writen in C# / WPF (maybe Avalonia with coreclr/mono in the future) (TODO)
+- Based on libgit2sharp and writen in C# / WPF (Avalonia with mono/dotnet in the future) (TODO)
 
 - Auto check for .gitignore file
 
@@ -12,7 +12,7 @@
 
 - Per project settings saved in .gitgamegui file
 
-- Per project user settings saved in .gitgamegui-user file (don't track)
+- Per project user settings saved in .gitgamegui-user file (don't track [add to .gitignore!])
 
 - Doesn't allow non resolved files to be staged without warning.
 
