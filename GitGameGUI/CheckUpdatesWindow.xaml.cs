@@ -93,17 +93,29 @@ namespace GitGameGUI
 			{
 				return true;
 			}
+			else if (v1.major < v2.major)
+			{
+				return false;
+			}
 			else if (v1.major == v2.major)
 			{
 				if (v1.minor > v2.minor)
 				{
 					return true;
 				}
+				else if (v1.minor < v2.minor)
+				{
+					return false;
+				}
 				else
 				{
 					if (v1.patch > v2.patch)
 					{
 						return true;
+					}
+					else if (v1.patch < v2.patch)
+					{
+						return false;
 					}
 					else
 					{
