@@ -26,7 +26,7 @@ namespace GitGameGUI.Filters
 
 			try
 			{
-				// write all file data to stdin
+				// write file data to stdin
 				input.CopyTo(process.StandardInput.BaseStream);
 				input.Flush();
 			}

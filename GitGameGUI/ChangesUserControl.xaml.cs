@@ -513,31 +513,52 @@ namespace GitGameGUI
 			try
 			{
 				CheckIfBranchHasRemote();
+				
+				var options = new PushOptions();
 
 				// pre push git lfs file data
 				if (RepoUserControl.repoSettings.lfsSupport)
 				{
-					using (var process = new Process())
+					options.OnNegotiationCompletedBeforePush = delegate(IEnumerable<PushUpdate> updates)
 					{
-						process.StartInfo.FileName = "git-lfs";
-						process.StartInfo.Arguments = "pre-push origin " + BranchesUserControl.activeBranch.FriendlyName;
-						process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
-						process.StartInfo.CreateNoWindow = true;
-						process.StartInfo.UseShellExecute = false;
-						process.StartInfo.RedirectStandardInput = true;
-						process.StartInfo.RedirectStandardOutput = true;
-						process.Start();
+						using (var process = new Process())
+						{
+							process.StartInfo.FileName = "git-lfs";
+							process.StartInfo.Arguments = "pre-push origin";
+							process.StartInfo.WorkingDirectory = RepoUserControl.repoPath;
+							process.StartInfo.CreateNoWindow = true;
+							process.StartInfo.UseShellExecute = false;
+							process.StartInfo.RedirectStandardInput = true;
+							process.StartInfo.RedirectStandardOutput = true;
+							process.StartInfo.RedirectStandardError = true;
+							process.Start();
 				
-						process.StandardInput.Write("\0");// needs something/anything written to its stdin (or it wont execute?)
-						process.StandardInput.Flush();
-						process.StandardInput.Close();
-						process.WaitForExit();
+							foreach (var update in updates)
+							{
+								string value = string.Format("{0} {1} {2} {3}\n", update.SourceRefName, update.SourceObjectId.Sha, update.DestinationRefName, update.DestinationObjectId.Sha);
+								process.StandardInput.Write(value);
+							}
 
-						Console.WriteLine(process.StandardOutput.ReadToEnd());
-					}
+							process.StandardInput.Write("\0");
+							process.StandardInput.Flush();
+							process.StandardInput.Close();
+							process.WaitForExit();
+
+							string output = process.StandardOutput.ReadToEnd();
+							string outputErr = process.StandardError.ReadToEnd();
+							if (!string.IsNullOrEmpty(output)) Console.WriteLine("git-lfs pre-push results: " + output);
+							if (!string.IsNullOrEmpty(outputErr))
+							{
+								Console.WriteLine("git-lfs pre-push error results: " + outputErr);
+								return false;
+							}
+						}
+
+						return true;
+					};
 				}
 				
-				var options = new PushOptions();
+				// post git push
 				options.CredentialsProvider = (_url, _user, _cred) => RepoUserControl.credentials;
 				bool pushError = false;
 				options.OnPushStatusError = delegate(PushStatusError ex)
