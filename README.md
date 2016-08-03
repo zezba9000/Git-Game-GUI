@@ -1,5 +1,6 @@
 # Git-Game-GUI (v0.1.0.0)
 
+Chat on Gitter: https://gitter.im/reign-studios/git-game-gui
 
 
 - NOTE: This is just in the prototype faze.
