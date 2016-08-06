@@ -1,7 +1,7 @@
 # Git-Game-GUI (v0.1.0.0)
 
 Chat on Gitter: https://gitter.im/reign-studios/git-game-gui
-![alt tag](https://raw.githubusercontent.com/zezba9000/Git-Game-GUI/ScreenShots/ScreenShot.png)
+![alt tag](http://reign-studios-services.com/GitGameGUI/ScreenShots/ScreenShot.png)
 
 
 - NOTE: This is just in the prototype faze.
