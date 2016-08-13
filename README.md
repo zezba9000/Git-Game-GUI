@@ -1,5 +1,7 @@
 # Git-Game-GUI (v0.1.0.0)
 
+NOTE: This version will be replaced with a cross-platform version: https://github.com/reignstudios/Git-It-GUI
+
 ![alt tag](http://reign-studios-services.com/GitGameGUI/ScreenShots/ScreenShot.png)
 
 
