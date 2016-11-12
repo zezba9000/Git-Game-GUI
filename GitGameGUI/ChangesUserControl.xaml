@@ -4,12 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GitGameGUI"
-			 xmlns:self="clr-namespace:GitGameGUI"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1280">
 
 	<UserControl.Resources>
-		<self:FileItem x:Key="FileItem"/>
+		<local:FileItem x:Key="FileItem"/>
 		<DataTemplate x:Key="ListViewTemplate">
 			<StackPanel Orientation="Horizontal">
 				<Image Source="{Binding Path=Icon}" Width="24" Height="24" MouseDown="FileItemImage_MouseDown"/>
